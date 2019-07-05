@@ -21,6 +21,9 @@ $context->classes
 $app->bearCMS->addons
     ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
         $addon->initialize = function (array $options) use ($app) {
+
+            \BearCMS\Internal\Config::$appSpecificServerData['glzm4a4'] = 1;
+
             \BearCMS\Internal\ServerCommands::add('visitorStatsGet', function (array $data) {
                 if (isset($data['type'], $data['startDate'], $data['endDate'])) {
                     $type = $data['type'];
@@ -59,6 +62,9 @@ $app->bearCMS->addons
             //     }
 
             $app->addEventListener('beforeSendResponse', function (App\BeforeSendResponseEventDetails $details) use ($app) {
+                if ($app->bearCMS->currentUser->exists()) {
+                    return;
+                }
                 $response = $details->response;
                 if ($response instanceof App\Response\HTML) {
                     $htmlToInsert = '';
