@@ -49,6 +49,17 @@ class VisitorStatsTest extends BearFramework\AddonTests\PHPUnitTestCase
     /**
      *
      */
+    public function testApply()
+    {
+        $app = $this->getApp();
+        $request = new \BearFramework\App\Request\HTML('hello');
+        $app->visitorStats->apply($request);
+        $this->assertTrue(true);
+    }
+
+    /**
+     *
+     */
     // public function testPageviewsCount()
     // {
 

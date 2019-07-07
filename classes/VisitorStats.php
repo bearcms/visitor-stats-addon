@@ -10,6 +10,7 @@
 namespace BearCMS;
 
 use BearFramework\App;
+use IvoPetkov\HTML5DOMDocument;
 
 /**
  *
