@@ -13,20 +13,21 @@ require __DIR__ . '/../vendor/autoload.php';
 // $test = new VisitorStatsTest();
 // $app = $test->getApp();
 
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/']); // session start
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/', 'referrer' => '']); // session start
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://example.com/']);
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'example.com']);
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/services/', 'referrer' => 'http://google.com/']); // session start
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'google.com']); // session start
-// BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/contacts/', 'referrer' => 'http://yahoo.com/asdads/']); // session start
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/']); // session start
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/', 'referrer' => '']); // session start
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://example.com/']);
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'example.com']);
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/services/', 'referrer' => 'http://google.com/']); // session start
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'google.com']); // session start
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/contacts/', 'referrer' => 'http://yahoo.com/asdads/']); // session start
+// $app->visitorStats->log('pageview', ['url' => 'http://example.com/абвгдежз/', 'referrer' => '']); // session start
 // $currentTime = time();
-// $result = BearCMS\Addons\VisitorStats::getStats($currentTime-86400, $currentTime, [
+// $result = $app->visitorStats->getStats($currentTime - 86400, $currentTime, [
 //     'lastPageviews',
 //     'pageviewsPerDayCount',
 //     'sessionsPerDayCount',
-//     'sourceVisitsCount',
+//     'sourcesVisitsCount',
 //     'landingPagesCount',
-//     'pageviewsPerPageCount'
-//     ]);
+//     'pageviewsPerPageCount',
+// ]);
 // print_r($result);

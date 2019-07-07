@@ -25,6 +25,15 @@ class VisitorStatsTest extends BearFramework\AddonTests\PHPUnitTestCase
     /**
      *
      */
+    public function testShortcut()
+    {
+        $app = $this->getApp();
+        $this->assertTrue($app->visitorStats instanceof \BearCMS\VisitorStats);
+    }
+
+    /**
+     *
+     */
     public function testInitialize()
     {
         $app = $this->getApp();

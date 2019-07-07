@@ -7,29 +7,39 @@
  * Free to use under the MIT license.
  */
 
-use BearCMS\Addons\VisitorStats;
+use BearCMS\VisitorStats;
 use BearFramework\App;
-use IvoPetkov\HTML5DOMDocument;
 
 $app = App::get();
 
 $context = $app->contexts->get(__FILE__);
 
 $context->classes
-    ->add('BearCMS\Addons\VisitorStats', 'classes/VisitorStats.php');
+    ->add('BearCMS\VisitorStats', 'classes/VisitorStats.php');
+
+$app->shortcuts
+    ->add('visitorStats', function () {
+        return new VisitorStats();
+    });
 
 $app->bearCMS->addons
     ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
         $addon->initialize = function (array $options) use ($app) {
 
+            $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
+            // todo
+            $excludeKnownQueryParameters = isset($options['excludeKnownQueryParameters']) ? (int) $options['excludeKnownQueryParameters'] > 0 : true;
+            // todo
+            $excludeBots = isset($options['excludeBots']) ? (int) $options['excludeBots'] > 0 : true;
+
             \BearCMS\Internal\Config::$appSpecificServerData['glzm4a4'] = 1;
 
-            \BearCMS\Internal\ServerCommands::add('visitorStatsGet', function (array $data) {
+            \BearCMS\Internal\ServerCommands::add('visitorStatsGet', function (array $data) use ($app) {
                 if (isset($data['type'], $data['startDate'], $data['endDate'])) {
                     $type = $data['type'];
                     $startDate = (new DateTime($data['startDate']))->getTimestamp();
                     $endDate = (new DateTime($data['endDate']))->getTimestamp();
-                    $result = VisitorStats::getStats($startDate, $endDate, [$type]);
+                    $result = $app->visitorStats->getStats($startDate, $endDate, [$type]);
                     return $result[$type];
                 }
             });
@@ -48,36 +58,13 @@ $app->bearCMS->addons
                     return $response;
                 });
 
-            //     if ($this->logCurrentRequest) {
-            //         if ((string) $app->request->path !== '/-vs.js') {
-            //             $data = [];
-            //             $data['url'] = $app->request->getURL();
-            //             $data['method'] = $app->request->method;
-            //             $referrer = isset($_SERVER['HTTP_REFERER']) ? (string) parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) : '';
-            //             if (!empty($referrer)) {
-            //                 $data['referrer'] = $referrer;
-            //             }
-            //             $this->log('request', $data);
-            //         }
-            //     }
-
-            $app->addEventListener('beforeSendResponse', function (App\BeforeSendResponseEventDetails $details) use ($app) {
-                if ($app->bearCMS->currentUser->exists()) {
-                    return;
-                }
-                $response = $details->response;
-                if ($response instanceof App\Response\HTML) {
-                    $htmlToInsert = '';
-                    // taken from dev/library.js
-                    $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs.js'), '<script>var vsjs="undefined"!==typeof vsjs?vsjs:function(){return{log:function(b,c){"undefined"===typeof b&&(b="");"undefined"===typeof c&&(c={});var a=document.createElement("script");a.type="text/javascript";a.async=!0;a.src="INSERT_URL_HERE?a="+encodeURIComponent(b)+"&d="+encodeURIComponent(JSON.stringify(c));var d=document.getElementsByTagName("script")[0];d.parentNode.insertBefore(a,d)}}}();</script>');
-                    // taken from dev/log-client-pageview-event.js
-                    $htmlToInsert .= '<script>(function(){var a=function(){var b={};b.url=window.location.toString();var a="";try{var c=(new URL(document.referrer)).host;a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();</script>';
-                    $domDocument = new HTML5DOMDocument();
-                    $domDocument->loadHTML($response->content, HTML5DOMDocument::ALLOW_DUPLICATE_IDS);
-                    $domDocument->insertHTML($htmlToInsert);
-                    $response->content = $domDocument->saveHTML();
-                }
-            });
+            if ($autoTrackPageviews) {
+                $app->addEventListener('beforeSendResponse', function (App\BeforeSendResponseEventDetails $details) use ($app) {
+                    if ($details->response instanceof App\Response\HTML) {
+                        $app->visitorStats->apply($details->response, ['trackPageview' => true]);
+                    }
+                });
+            }
 
         };
     });

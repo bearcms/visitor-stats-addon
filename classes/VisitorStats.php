@@ -7,7 +7,7 @@
  * Free to use under the MIT license.
  */
 
-namespace BearCMS\Addons;
+namespace BearCMS;
 
 use BearFramework\App;
 
@@ -19,10 +19,36 @@ class VisitorStats
 
     /**
      *
+     *
+     * @param App\Response $response
+     * @param array $options Available values: trackPageview
+     * @return void
+     */
+    public function apply(App\Response $response, array $options = []): void
+    {
+        $trackPageview = isset($options['trackPageview']) ? (int) $options['trackPageview'] > 0 : false;
+        $app = App::get();
+        if ($app->bearCMS->currentUser->exists()) {
+            return;
+        }
+        $htmlToInsert = '';
+        // taken from dev/library.js
+        $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs.js'), '<script>var vsjs="undefined"!==typeof vsjs?vsjs:function(){return{log:function(b,c){"undefined"===typeof b&&(b="");"undefined"===typeof c&&(c={});var a=document.createElement("script");a.type="text/javascript";a.async=!0;a.src="INSERT_URL_HERE?a="+encodeURIComponent(b)+"&d="+encodeURIComponent(JSON.stringify(c));var d=document.getElementsByTagName("script")[0];d.parentNode.insertBefore(a,d)}}}();</script>');
+        if ($trackPageview) {
+            // taken from dev/log-client-pageview-event.js
+            $htmlToInsert .= '<script>(function(){var a=function(){var b={};b.url=window.location.toString();var a="";try{var c=(new URL(document.referrer)).host;a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();</script>';
+        }
+        $domDocument = new HTML5DOMDocument();
+        $domDocument->loadHTML($response->content, HTML5DOMDocument::ALLOW_DUPLICATE_IDS);
+        $domDocument->insertHTML($htmlToInsert);
+        $response->content = $domDocument->saveHTML();
+    }
+    /**
+     *
      * @param string $action
      * @param array $data
      */
-    public static function log(string $action, array $data = [])
+    public function log(string $action, array $data = [])
     {
         $app = App::get();
 
@@ -55,7 +81,7 @@ class VisitorStats
      * @param array $types
      * @return array
      */
-    public static function getStats(int $startDate, int $endDate, array $types): ?array
+    public function getStats(int $startDate, int $endDate, array $types): ?array
     {
         $invervalCodes = self::getDateIntervalCodes($startDate, $endDate);
         $data = self::getData($startDate, $endDate);
@@ -110,7 +136,13 @@ class VisitorStats
                 if ($type === 'lastPageviews') {
                     if ($action === 'pageview' && isset($itemData['url'], $itemData['referrer'])) {
                         $setListType();
-                        //$result[] = [$dateCode, $itemData['url']];
+                        $urlHost = $getHost($itemData['url']);
+                        $referrerHost = $getHost($itemData['referrer']);
+                        $dateTime = new \DateTime($item[0]);
+                        $result[] = ['datetime' => $dateTime->getTimestamp(), 'page' => $getPath($itemData['url']), 'source' => ($urlHost !== $referrerHost ? $referrerHost : null)];
+                        if (sizeof($result) === 100) { // todo
+                            break;
+                        }
                     }
                 } elseif ($type === 'pageviewsPerDayCount') {
                     if ($action === 'pageview') {
@@ -126,7 +158,7 @@ class VisitorStats
                             $result[$dateCode]++;
                         }
                     }
-                } elseif ($type === 'sourceVisitsCount') {
+                } elseif ($type === 'sourcesVisitsCount') {
                     if ($action === 'pageview' && isset($itemData['url'], $itemData['referrer'])) {
                         $urlHost = $getHost($itemData['url']);
                         $referrerHost = $getHost($itemData['referrer']);
@@ -165,8 +197,11 @@ class VisitorStats
                 foreach ($invervalCodes as $dateCode) {
                     $temp[$dateCode] = isset($result[$dateCode]) ? $result[$dateCode] : 0;
                 }
+                ksort($temp);
                 $result = $temp;
                 unset($temp);
+            } elseif ($resultType === 'listCount') {
+                arsort($result);
             }
             return $result;
         };
@@ -179,13 +214,13 @@ class VisitorStats
     }
 
     /**
-     *
+     * Returns in intervals in REVERSE order
      *
      * @param integer $startDate
      * @param integer $endDate
      * @return array
      */
-    private static function getDateIntervalCodes(int $startDate, int $endDate): array
+    private function getDateIntervalCodes(int $startDate, int $endDate): array
     {
         if ($startDate > $endDate) {
             throw new \Exception();
@@ -194,17 +229,19 @@ class VisitorStats
         for ($timestamp = $startDate; $timestamp <= $endDate; $timestamp += 86400) {
             $result[date('Y-m-d', $timestamp)] = true;
         }
-        return array_keys($result);
+        $result = array_keys($result);
+        $result = array_reverse($result);
+        return $result;
     }
 
     /**
-     *
+     * Returns data in REVERSE order
      *
      * @param integer $startDate
      * @param integer $endDate
      * @return array
      */
-    private static function getData(int $startDate, int $endDate): array
+    private function getData(int $startDate, int $endDate): array
     {
         $app = App::get();
         $result = [];
@@ -213,6 +250,7 @@ class VisitorStats
             $list = $app->data->getValue('bearcms-visitor-stats/' . $dateCode . '.jsonlist');
             if ($list !== null) {
                 $list = explode("\n", $list);
+                $list = array_reverse($list);
                 foreach ($list as $item) {
                     $item = trim($item);
                     if (isset($item[0])) {
