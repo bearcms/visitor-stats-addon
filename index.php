@@ -45,13 +45,13 @@ $app->bearCMS->addons
             });
 
             $app->routes
-                ->add('/-vs.js', function () {
+                ->add('/-vs.js', function () use ($app) {
                     $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
                     if (!is_array($data)) {
                         $data = [];
                     }
                     $action = isset($_GET['a']) ? (string) urldecode((string) $_GET['a']) : '';
-                    VisitorStats::log($action, $data);
+                    $app->visitorStats->log($action, $data);
                     $response = new App\Response('{}');
                     $response->headers->set($response->headers->make('Content-Type', 'text/javascript; charset=UTF-8'));
                     $response->headers->set($response->headers->make('Cache-Control', 'no-cache, no-store, must-revalidate'));
