@@ -27,7 +27,7 @@ $app->bearCMS->addons
         $addon->initialize = function (array $options) use ($app) {
 
             $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
-            // todo
+            // todo // gclid fbclid
             $excludeKnownQueryParameters = isset($options['excludeKnownQueryParameters']) ? (int) $options['excludeKnownQueryParameters'] > 0 : true;
             // todo
             $excludeBots = isset($options['excludeBots']) ? (int) $options['excludeBots'] > 0 : true;
@@ -35,13 +35,7 @@ $app->bearCMS->addons
             \BearCMS\Internal\Config::$appSpecificServerData['glzm4a4'] = 1;
 
             \BearCMS\Internal\ServerCommands::add('visitorStatsGet', function (array $data) use ($app) {
-                if (isset($data['type'], $data['startDate'], $data['endDate'])) {
-                    $type = $data['type'];
-                    $startDate = (new DateTime($data['startDate']))->getTimestamp();
-                    $endDate = (new DateTime($data['endDate']))->getTimestamp();
-                    $result = $app->visitorStats->getStats($startDate, $endDate, [$type]);
-                    return $result[$type];
-                }
+                return $app->visitorStats->getStats($data);
             });
 
             $app->routes
@@ -65,6 +59,5 @@ $app->bearCMS->addons
                     }
                 });
             }
-
         };
     });

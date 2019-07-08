@@ -44,6 +44,7 @@ class VisitorStats
         $domDocument->insertHTML($htmlToInsert);
         $response->content = $domDocument->saveHTML();
     }
+
     /**
      *
      * @param string $action
@@ -53,7 +54,7 @@ class VisitorStats
     {
         $app = App::get();
 
-//        $anonymizeIP = function($ip) {
+        //        $anonymizeIP = function($ip) {
         //            $v6 = strpos($ip, ':') !== false;
         //            $parts = explode($v6 ? ':' : '.', $ip);
         //            $partsCount = sizeof($parts);
@@ -66,188 +67,256 @@ class VisitorStats
         //        isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : ''
 
         $dataToWrite = [];
-        $dataToWrite[] = 1; // data format version
-        $dataToWrite[] = date('H:i:s');
+        $dataToWrite[] = 2; // data format version
+        $dataToWrite[] = time();
         $dataToWrite[] = $action;
         $dataToWrite[] = $data;
 
         $app->data->append('bearcms-visitor-stats/' . date('Y-m-d') . '.jsonlist', json_encode($dataToWrite) . "\n");
     }
 
+
     /**
+     * Undocumented function
      *
-     *
-     * @param integer $startDate
-     * @param integer $endDate
-     * @param array $types
-     * @return array
+     * @param array $list
+     * @return array|null
      */
-    public function getStats(int $startDate, int $endDate, array $types): ?array
+    public function getStats(array $list): ?array
     {
-        $invervalCodes = self::getDateIntervalCodes($startDate, $endDate);
-        $data = self::getData($startDate, $endDate);
+        $app = App::get();
 
-        $get = function (string $type) use ($data, $invervalCodes) {
-            $result = [];
-            $resultType = null;
-            $setDayCountType = function ($dateCode) use (&$result, &$resultType) {
-                if (!isset($result[$dateCode])) {
-                    $result[$dateCode] = 0;
-                }
-                if ($resultType === null) {
-                    $resultType = 'dayCount';
-                }
-            };
-            $setListCountType = function ($key) use (&$result, &$resultType) {
-                if (!isset($result[$key])) {
-                    $result[$key] = 0;
-                }
-                if ($resultType === null) {
-                    $resultType = 'listCount';
-                }
-            };
-            $setListType = function () use (&$resultType) {
-                if ($resultType === null) {
-                    $resultType = 'list';
-                }
-            };
-
-            $getHost = function (string $url): ?string {
-                if (strlen($url) === 0) {
-                    return null;
-                }
-                if (strpos($url, '://') === false) {
-                    $url = 'http://' . $url;
-                }
-                return parse_url($url, PHP_URL_HOST);
-            };
-
-            $getPath = function (string $url): ?string {
-                if (strlen($url) === 0 || strpos($url, '://') === false) {
-                    return null;
-                }
-                return parse_url($url, PHP_URL_PATH);
-            };
-
-            foreach ($data as $item) {
-                $dateCode = substr($item[0], 0, 10);
-                $action = $item[1];
-                $itemData = $item[2];
-
-                if ($type === 'lastPageviews') {
-                    if ($action === 'pageview' && isset($itemData['url'], $itemData['referrer'])) {
-                        $setListType();
-                        $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
-                        $dateTime = new \DateTime($item[0]);
-                        $result[] = ['datetime' => $dateTime->getTimestamp(), 'page' => $getPath($itemData['url']), 'source' => ($urlHost !== $referrerHost ? $referrerHost : null)];
-                        if (sizeof($result) === 100) { // todo
-                            break;
-                        }
-                    }
-                } elseif ($type === 'pageviewsPerDayCount') {
-                    if ($action === 'pageview') {
-                        $setDayCountType($dateCode);
-                        $result[$dateCode]++;
-                    }
-                } elseif ($type === 'sessionsPerDayCount') {
-                    if ($action === 'pageview' && isset($itemData['url'], $itemData['referrer'])) {
-                        $setDayCountType($dateCode);
-                        $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
-                        if ($urlHost !== null && $urlHost !== $referrerHost) {
-                            $result[$dateCode]++;
-                        }
-                    }
-                } elseif ($type === 'sourcesVisitsCount') {
-                    if ($action === 'pageview' && isset($itemData['url'], $itemData['referrer'])) {
-                        $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
-                        if ($referrerHost !== null && $urlHost !== $referrerHost) {
-                            $setListCountType($referrerHost);
-                            $result[$referrerHost]++;
-                        }
-                    }
-                } elseif ($type === 'landingPagesCount') {
-                    if ($action === 'pageview' && isset($itemData['url'], $itemData['referrer'])) {
-                        $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
-                        if ($urlHost !== null && $referrerHost !== null && $urlHost !== $referrerHost) {
-                            $path = $getPath($itemData['url']);
-                            $setListCountType($path);
-                            $result[$path]++;
-                        }
-                    }
-                } elseif ($type === 'pageviewsPerPageCount') {
-                    if ($action === 'pageview' && isset($itemData['url'])) {
-                        $path = $getPath($itemData['url']);
-                        if ($path !== null) {
-                            $setListCountType($path);
-                            $result[$path]++;
-                        }
-                    }
-                } else {
-                    return null;
-                }
+        $calculateIntervalDateCodes = function (int $startDate, int $endDate): array {
+            if ($startDate > $endDate) {
+                throw new \Exception();
             }
-            if ($resultType === null) {
+            $result = [];
+            for ($timestamp = $startDate; $timestamp <= $endDate; $timestamp += 86400) {
+                $result[date('Y-m-d', $timestamp)] = true;
+            }
+            return array_keys($result);
+        };
+
+        $getHost = function (string $url): ?string {
+            if (strlen($url) === 0) {
                 return null;
             }
-            if ($resultType === 'dayCount') {
-                $temp = [];
-                foreach ($invervalCodes as $dateCode) {
-                    $temp[$dateCode] = isset($result[$dateCode]) ? $result[$dateCode] : 0;
+            if (strpos($url, '://') === false) {
+                $url = 'http://' . $url;
+            }
+            return parse_url($this->fixEncoding($url), PHP_URL_HOST);
+        };
+
+        $getPath = function (string $url): ?string {
+            if (strlen($url) === 0 || strpos($url, '://') === false) {
+                return null;
+            }
+            return parse_url($this->fixEncoding($url), PHP_URL_PATH);
+        };
+
+        $getAvailableDateCodes = function () use ($app) {
+            $list = $app->data->getList()
+                ->filterBy('key', 'bearcms-visitor-stats/', 'startWith')
+                ->sliceProperties(['key']);
+            $result = [];
+            foreach ($list as $item) {
+                $matches = null;
+                preg_match('/bearcms-visitor-stats\/([0-9]{4}\-[0-9]{2}\-[0-9]{2})\.jsonlist/', $item->key, $matches);
+                if (isset($matches[1])) {
+                    $result[] = $matches[1];
                 }
-                ksort($temp);
-                $result = $temp;
-                unset($temp);
-            } elseif ($resultType === 'listCount') {
-                arsort($result);
             }
             return $result;
         };
 
+        $sortDataByTime = function (&$data, $order = 'desc') {
+            usort($data, function ($a, $b) use ($order) {
+                if ($order === 'desc') {
+                    return $b[0] - $a[0];
+                }
+                return $a[0] - $b[0];
+            });
+        };
+
+        $get = function (string $type, array $options) use ($getHost, $getPath, $getAvailableDateCodes, $sortDataByTime, $calculateIntervalDateCodes) {
+            $result = [];
+
+            $isPageview = function ($item) {
+                return $item[1] === 'pageview' && isset($item[2]['url'], $item[2]['referrer']);
+            };
+
+            $getLimitOption = function () use ($options) {
+                return isset($options['limit']) ? (int) $options['limit'] : 10;
+            };
+
+            $getFromOption = function () use ($options) {
+                return isset($options['from']) ? (int) $options['from'] : time() - 7 * 86400;
+            };
+
+            $getToOption = function () use ($options) {
+                return isset($options['to']) ? (int) $options['to'] : time();
+            };
+
+            if ($type === 'lastPageviews') {
+                $limit = $getLimitOption();
+                $dateCodes = $getAvailableDateCodes();
+                rsort($dateCodes);
+                foreach ($dateCodes as $dateCode) {
+                    $data = $this->getData([$dateCode]);
+                    $sortDataByTime($data);
+                    foreach ($data as $item) {
+                        if (!$isPageview($item)) {
+                            continue;
+                        }
+                        $itemData = $item[2];
+                        $urlHost = $getHost($itemData['url']);
+                        $referrerHost = $getHost($itemData['referrer']);
+                        $result[] = ['datetime' => $item[0], 'path' => $getPath($itemData['url']), 'source' => ($urlHost !== $referrerHost ? $referrerHost : null)];
+                        if (sizeof($result) === $limit) {
+                            break;
+                        }
+                    }
+                }
+            } elseif ($type === 'pageviewsPerDayCount' || $type === 'sessionsPerDayCount') {
+                $from = $getFromOption();
+                $to = $getToOption();
+                $dateCodes = $calculateIntervalDateCodes($from, $to);
+                $data = $this->getData($dateCodes);
+                $temp = [];
+                foreach ($data as $item) {
+                    $itemData = $item[2];
+                    if (!$isPageview($item)) {
+                        continue;
+                    }
+                    if ($item[0] < $from || $item[0] > $to) {
+                        continue;
+                    }
+                    if ($type === 'sessionsPerDayCount') {
+                        $urlHost = $getHost($itemData['url']);
+                        $referrerHost = $getHost($itemData['referrer']);
+                        if ($referrerHost === null || $urlHost === $referrerHost) {
+                            continue;
+                        }
+                    }
+                    $dateCode = date('Y-m-d', $item[0]);
+                    if (!isset($temp[$dateCode])) {
+                        $temp[$dateCode] = 0;
+                    }
+                    $temp[$dateCode]++;
+                }
+                if (isset($options['addEmptyDays']) && $options['addEmptyDays'] === true) {
+                    foreach ($dateCodes as $dateCode) {
+                        if (!isset($temp[$dateCode])) {
+                            $temp[$dateCode] = 0;
+                        }
+                    }
+                }
+                if (isset($options['sortByDate'])) {
+                    if ($options['sortByDate'] === 'desc') {
+                        krsort($temp);
+                    } else {
+                        ksort($temp);
+                    }
+                }
+                foreach ($temp as $dateCode => $count) {
+                    $result[] = [
+                        'date' => $dateCode,
+                        'count' => $count
+                    ];
+                }
+                unset($temp);
+            } elseif ($type === 'sourcesVisitsCount') {
+                $from = $getFromOption();
+                $to = $getToOption();
+                $data = $this->getData($calculateIntervalDateCodes($from, $to));
+                $temp = [];
+                foreach ($data as $item) {
+                    $itemData = $item[2];
+                    if (!$isPageview($item)) {
+                        continue;
+                    }
+                    if ($item[0] < $from || $item[0] > $to) {
+                        continue;
+                    }
+                    $urlHost = $getHost($itemData['url']);
+                    $referrerHost = $getHost($itemData['referrer']);
+                    if ($referrerHost !== null && $urlHost !== $referrerHost) {
+                        if (!isset($temp[$referrerHost])) {
+                            $temp[$referrerHost] = 0;
+                        }
+                        $temp[$referrerHost]++;
+                    }
+                }
+                foreach ($temp as $source => $count) {
+                    $result[] = [
+                        'source' => $source,
+                        'count' => $count
+                    ];
+                }
+                unset($temp);
+            } elseif ($type === 'landingPagesCount' || $type === 'pageviewsPerPageCount') {
+                $from = $getFromOption();
+                $to = $getToOption();
+                $data = $this->getData($calculateIntervalDateCodes($from, $to));
+                $temp = [];
+                foreach ($data as $item) {
+                    $itemData = $item[2];
+                    if (!$isPageview($item)) {
+                        continue;
+                    }
+                    if ($item[0] < $from || $item[0] > $to) {
+                        continue;
+                    }
+                    if ($type === 'landingPagesCount') {
+                        $urlHost = $getHost($itemData['url']);
+                        $referrerHost = $getHost($itemData['referrer']);
+                        if ($urlHost !== null && $urlHost !== $referrerHost) {
+                            $path = $getPath($itemData['url']);
+                            if (!isset($temp[$path])) {
+                                $temp[$path] = 0;
+                            }
+                            $temp[$path]++;
+                        }
+                    } elseif ($type === 'pageviewsPerPageCount') {
+                        $path = $getPath($itemData['url']);
+                        if (!isset($temp[$path])) {
+                            $temp[$path] = 0;
+                        }
+                        $temp[$path]++;
+                    }
+                }
+                foreach ($temp as $path => $count) {
+                    $result[] = [
+                        'path' => $path,
+                        'count' => $count
+                    ];
+                }
+                unset($temp);
+            }
+
+            return $result;
+        };
+
         $result = [];
-        foreach ($types as $type) {
-            $result[$type] = $get($type);
+        foreach ($list as $item) {
+            $type = $item['type'];
+            unset($item['type']);
+            $result[$type] = $get($type, $item);
         }
         return $result;
     }
 
     /**
-     * Returns in intervals in REVERSE order
+     * Undocumented function
      *
-     * @param integer $startDate
-     * @param integer $endDate
+     * @param array $dateCodes
      * @return array
      */
-    private function getDateIntervalCodes(int $startDate, int $endDate): array
-    {
-        if ($startDate > $endDate) {
-            throw new \Exception();
-        }
-        $result = [];
-        for ($timestamp = $startDate; $timestamp <= $endDate; $timestamp += 86400) {
-            $result[date('Y-m-d', $timestamp)] = true;
-        }
-        $result = array_keys($result);
-        $result = array_reverse($result);
-        return $result;
-    }
-
-    /**
-     * Returns data in REVERSE order
-     *
-     * @param integer $startDate
-     * @param integer $endDate
-     * @return array
-     */
-    private function getData(int $startDate, int $endDate): array
+    private function getData(array $dateCodes): array
     {
         $app = App::get();
         $result = [];
-        $invervalCodes = self::getDateIntervalCodes($startDate, $endDate);
-        foreach ($invervalCodes as $dateCode) {
+        foreach ($dateCodes as $dateCode) {
             $list = $app->data->getValue('bearcms-visitor-stats/' . $dateCode . '.jsonlist');
             if ($list !== null) {
                 $list = explode("\n", $list);
@@ -256,8 +325,11 @@ class VisitorStats
                     $item = trim($item);
                     if (isset($item[0])) {
                         $item = json_decode($item, true);
-                        if ($item[0] === 1) {
-                            $result[] = [$dateCode . ' ' . $item[1], $item[2], $item[3]];
+                        if ($item[0] === 2) {
+                            $result[] = [$item[1], $item[2], $item[3]];
+                        } elseif ($item[0] === 1) {
+                            $datetime = new DateTime($dateCode . ' ' . $item[1]);
+                            $result[] = [$datetime->getTimestamp(), $item[2], $item[3]];
                         }
                     }
                 }
@@ -266,4 +338,23 @@ class VisitorStats
         return $result;
     }
 
+    /**
+     * Fixes URL encoding (UTF8 to ASCII)
+     *
+     * @param string $url
+     * @return string
+     */
+    private function fixEncoding(string $url): string
+    {
+        $length = mb_strlen($url);
+        $chars = [];
+        for ($i = 0; $i < $length; $i += 1) {
+            $char = mb_substr($url, $i, 1);
+            if (!mb_check_encoding($char, 'ASCII')) {
+                $char = urlencode($char);
+            }
+            $chars[] = $char;
+        }
+        return implode('', $chars);
+    }
 }

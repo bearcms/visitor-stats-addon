@@ -52,47 +52,42 @@ class VisitorStatsTest extends BearFramework\AddonTests\PHPUnitTestCase
     public function testApply()
     {
         $app = $this->getApp();
-        $request = new \BearFramework\App\Request\HTML('hello');
-        $app->visitorStats->apply($request);
+        $request = new \BearFramework\App\Response\HTML('hello');
+        $app->visitorStats->apply($request, ['trackPageview' => true]);
         $this->assertTrue(true);
     }
 
     /**
      *
      */
-    // public function testPageviewsCount()
-    // {
-
-    //     BearCMS\Addons\VisitorStats::log('pageview', []);
-    //     BearCMS\Addons\VisitorStats::log('pageview', []);
-    //     BearCMS\Addons\VisitorStats::log('pageview', []);
-    //     $currentTime = time();
-    //     $result = BearCMS\Addons\VisitorStats::getPageviewsCount($currentTime - 86400, $currentTime);
-    //     $expectedResult = [
-    //         [date('Y-m-d', $currentTime - 86400), 0],
-    //         [date('Y-m-d', $currentTime), 3],
-    //     ];
-    //     $this->assertEquals($result, $expectedResult);
-    // }
-
-    /**
-     *
-     */
-    // public function testSessions()
-    // {
-
-    //     BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/']); // session start
-    //     BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/', 'referrer' => '']); // session start
-    //     BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://example.com/']);
-    //     BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'example.com']);
-    //     BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://google.com/']); // session start
-    //     BearCMS\Addons\VisitorStats::log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'google.com']); // session start
-    //     $currentTime = time();
-    //     $result = BearCMS\Addons\VisitorStats::getSessionsCount($currentTime, $currentTime);
-    //     $expectedResult = [
-    //         [date('Y-m-d', $currentTime), 4],
-    //     ];
-    //     $this->assertEquals($result, $expectedResult);
-    // }
-
+    public function testGetStats()
+    {
+        $app = $this->getApp();
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/', 'referrer' => '']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://example.com/']);
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'example.com']);
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/services/', 'referrer' => 'http://google.com/']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'google.com']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'bing.com']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/contacts/', 'referrer' => 'http://yahoo.com/asdads/']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/абвгдежз/', 'referrer' => '']); // session start
+        $currentTime = time();
+        $from = $currentTime - 7 * 86400;
+        $to = $currentTime;
+        $result = $app->visitorStats->getStats([
+            ['type' => 'lastPageviews', 'limit' => 3],
+            ['type' => 'pageviewsPerDayCount', 'from' => $from, 'to' => $to, 'addEmptyDays' => true, 'sortByDate' => 'asc'],
+            ['type' => 'sessionsPerDayCount', 'from' => $from, 'to' => $to, 'addEmptyDays' => true, 'sortByDate' => 'asc'],
+            ['type' => 'sourcesVisitsCount', 'from' => $from, 'to' => $to],
+            ['type' => 'landingPagesCount', 'from' => $from, 'to' => $to],
+            ['type' => 'pageviewsPerPageCount', 'from' => $from, 'to' => $to],
+        ]);
+        $this->assertTrue(!empty($result['lastPageviews']));
+        $this->assertTrue(!empty($result['pageviewsPerDayCount']));
+        $this->assertTrue(!empty($result['sessionsPerDayCount']));
+        $this->assertTrue(!empty($result['sourcesVisitsCount']));
+        $this->assertTrue(!empty($result['landingPagesCount']));
+        $this->assertTrue(!empty($result['pageviewsPerPageCount']));
+    }
 }
