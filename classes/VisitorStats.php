@@ -328,7 +328,7 @@ class VisitorStats
                         if ($item[0] === 2) {
                             $result[] = [$item[1], $item[2], $item[3]];
                         } elseif ($item[0] === 1) {
-                            $datetime = new DateTime($dateCode . ' ' . $item[1]);
+                            $datetime = new \DateTime($dateCode . ' ' . $item[1]);
                             $result[] = [$datetime->getTimestamp(), $item[2], $item[3]];
                         }
                     }
