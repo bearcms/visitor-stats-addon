@@ -114,6 +114,24 @@ class VisitorStats
             return parse_url($this->fixEncoding($url), PHP_URL_PATH);
         };
 
+        $getSource = function (array $itemData) use ($getHost): ?string {
+            if (isset($itemData['source']) && strlen($itemData['source']) > 0) {
+                return $itemData['source'];
+            }
+            $urlHost = $getHost($itemData['url']);
+            $referrerHost = $getHost($itemData['referrer']);
+            if ($urlHost === $referrerHost) {
+                return null;
+            }
+            if ($referrerHost === null) {
+                return null;
+            }
+            if (mb_substr($referrerHost, 0, 4) === 'www.') {
+                return mb_substr($referrerHost, 4);
+            }
+            return $referrerHost;
+        };
+
         $getAvailableDateCodes = function () use ($app) {
             $list = $app->data->getList()
                 ->filterBy('key', 'bearcms-visitor-stats/', 'startWith')
@@ -138,15 +156,19 @@ class VisitorStats
             });
         };
 
-        $get = function (string $type, array $options) use ($getHost, $getPath, $getAvailableDateCodes, $sortDataByTime, $calculateIntervalDateCodes) {
+        $get = function (string $type, array $options) use ($getHost, $getPath, $getSource, $getAvailableDateCodes, $sortDataByTime, $calculateIntervalDateCodes) {
             $result = [];
 
             $isPageview = function ($item) {
                 return $item[1] === 'pageview' && isset($item[2]['url'], $item[2]['referrer']);
             };
 
-            $getLimitOption = function () use ($options) {
-                return isset($options['limit']) ? (int) $options['limit'] : 10;
+            $getStringOption = function (string $name) use ($options): ?string {
+                return isset($options[$name]) ? (string) $options[$name] : null;
+            };
+
+            $getIntOption = function (string $name) use ($options): ?int {
+                return isset($options[$name]) ? (int) $options[$name] : null;
             };
 
             $getFromOption = function () use ($options) {
@@ -157,30 +179,63 @@ class VisitorStats
                 return isset($options['to']) ? (int) $options['to'] : time();
             };
 
-            if ($type === 'lastPageviews') {
-                $limit = $getLimitOption();
+            $getSortByCountOption = function () use ($options) {
+                return isset($options['sortByCount']) ? (array_search($options['sortByCount'], ['asc', 'desc']) !== false ? $options['sortByCount'] : null) : null;
+            };
+
+            if ($type === 'lastPageviews' || $type === 'lastPageviewsPerPath' || $type === 'lastPageviewsPerSource') {
+                $limit = $getIntOption('limit');
                 $dateCodes = $getAvailableDateCodes();
+                if ($type === 'lastPageviewsPerPath') {
+                    $pathOption = $this->fixEncoding($getStringOption('path'));
+                } elseif ($type === 'lastPageviewsPerSource') {
+                    $sourceOption = $getStringOption('source');
+                }
                 rsort($dateCodes);
                 foreach ($dateCodes as $dateCode) {
                     $data = $this->getData([$dateCode]);
                     $sortDataByTime($data);
+                    $break = false;
                     foreach ($data as $item) {
                         if (!$isPageview($item)) {
                             continue;
                         }
                         $itemData = $item[2];
                         $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
-                        $result[] = ['datetime' => $item[0], 'path' => $getPath($itemData['url']), 'source' => ($urlHost !== $referrerHost ? $referrerHost : null)];
-                        if (sizeof($result) === $limit) {
+                        $path = $getPath($itemData['url']);
+                        $source = $getSource($itemData);
+                        if ($type === 'lastPageviewsPerPath') {
+                            if ($path !== null && $path !== $pathOption) {
+                                continue;
+                            }
+                        } elseif ($type === 'lastPageviewsPerSource') {
+                            if ($source === null || $source !== $sourceOption) {
+                                continue;
+                            }
+                        }
+                        $result[] = [
+                            'datetime' => $item[0],
+                            'path' => $path,
+                            'source' => $source
+                        ];
+                        if ($limit !== null && sizeof($result) === $limit) {
+                            $break = true;
                             break;
                         }
                     }
+                    if ($break) {
+                        break;
+                    }
                 }
-            } elseif ($type === 'pageviewsPerDayCount' || $type === 'sessionsPerDayCount') {
+            } elseif ($type === 'pageviewsPerDayCount' || $type === 'sessionsPerDayCount' || $type === 'pageviewsPerDayPerPageCount' || $type === 'pageviewsPerDayPerSourceCount') {
                 $from = $getFromOption();
                 $to = $getToOption();
                 $dateCodes = $calculateIntervalDateCodes($from, $to);
+                if ($type === 'pageviewsPerDayPerPageCount') {
+                    $pathOption = $this->fixEncoding($getStringOption('path'));
+                } elseif ($type === 'pageviewsPerDayPerSourceCount') {
+                    $sourceOption = $getStringOption('source');
+                }
                 $data = $this->getData($dateCodes);
                 $temp = [];
                 foreach ($data as $item) {
@@ -195,6 +250,16 @@ class VisitorStats
                         $urlHost = $getHost($itemData['url']);
                         $referrerHost = $getHost($itemData['referrer']);
                         if ($referrerHost === null || $urlHost === $referrerHost) {
+                            continue;
+                        }
+                    } elseif ($type === 'pageviewsPerDayPerPageCount') {
+                        $path = $getPath($itemData['url']);
+                        if ($path !== null && $path !== $pathOption) {
+                            continue;
+                        }
+                    } elseif ($type === 'pageviewsPerDayPerSourceCount') {
+                        $source = $getSource($itemData);
+                        if ($source === null || $source !== $sourceOption) {
                             continue;
                         }
                     }
@@ -238,14 +303,25 @@ class VisitorStats
                     if ($item[0] < $from || $item[0] > $to) {
                         continue;
                     }
-                    $urlHost = $getHost($itemData['url']);
-                    $referrerHost = $getHost($itemData['referrer']);
-                    if ($referrerHost !== null && $urlHost !== $referrerHost) {
-                        if (!isset($temp[$referrerHost])) {
-                            $temp[$referrerHost] = 0;
+                    $source = $getSource($itemData);
+                    if ($source !== null) {
+                        if (!isset($temp[$source])) {
+                            $temp[$source] = 0;
                         }
-                        $temp[$referrerHost]++;
+                        $temp[$source]++;
                     }
+                }
+                $sortByCount = $getSortByCountOption();
+                if ($sortByCount !== null) {
+                    if ($sortByCount === 'desc') {
+                        arsort($temp);
+                    } else {
+                        asort($temp);
+                    }
+                }
+                $limit = $getIntOption('limit');
+                if ($limit !== null) {
+                    $temp = array_chunk($temp, $limit, true)[0];
                 }
                 foreach ($temp as $source => $count) {
                     $result[] = [
@@ -284,6 +360,18 @@ class VisitorStats
                         }
                         $temp[$path]++;
                     }
+                }
+                $sortByCount = $getSortByCountOption();
+                if ($sortByCount !== null) {
+                    if ($sortByCount === 'desc') {
+                        arsort($temp);
+                    } else {
+                        asort($temp);
+                    }
+                }
+                $limit = $getIntOption('limit');
+                if ($limit !== null) {
+                    $temp = array_chunk($temp, $limit, true)[0];
                 }
                 foreach ($temp as $path => $count) {
                     $result[] = [

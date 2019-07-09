@@ -28,9 +28,9 @@ $app->bearCMS->addons
 
             $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
             // todo // gclid fbclid
-            $excludeKnownQueryParameters = isset($options['excludeKnownQueryParameters']) ? (int) $options['excludeKnownQueryParameters'] > 0 : true;
+            $excludeKnownQueryParametersInPageviews = isset($options['excludeKnownQueryParametersInPageviews']) ? (int) $options['excludeKnownQueryParametersInPageviews'] > 0 : true;
             // todo
-            $excludeBots = isset($options['excludeBots']) ? (int) $options['excludeBots'] > 0 : true;
+            $excludeBotsInPageviews = isset($options['excludeBotsInPageviews']) ? (int) $options['excludeBotsInPageviews'] > 0 : true;
 
             \BearCMS\Internal\Config::$appSpecificServerData['glzm4a4'] = 1;
 
@@ -40,11 +40,22 @@ $app->bearCMS->addons
 
             $app->routes
                 ->add('/-vs.js', function () use ($app) {
+                    $action = isset($_GET['a']) ? trim((string) urldecode((string) $_GET['a'])) : '';
                     $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
                     if (!is_array($data)) {
                         $data = [];
                     }
-                    $action = isset($_GET['a']) ? (string) urldecode((string) $_GET['a']) : '';
+                    if ($action === 'pageview') {
+                        $data['anonymizedUserAgent'] = isset($_SERVER['HTTP_USER_AGENT']) ? preg_replace('/[0-9]/', '*', strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT']))) : 'unknown';
+                        $query = parse_url($data['url'], PHP_URL_QUERY);
+                        if (strlen($query) > 0) {
+                            $temp = null;
+                            parse_str($query, $temp);
+                            if (isset($temp['-vssource'])) {
+                                $data['source'] = trim($temp['-vssource']);
+                            }
+                        }
+                    }
                     $app->visitorStats->log($action, $data);
                     $response = new App\Response('{}');
                     $response->headers->set($response->headers->make('Content-Type', 'text/javascript; charset=UTF-8'));
