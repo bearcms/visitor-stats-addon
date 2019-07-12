@@ -60,7 +60,7 @@ $app->bearCMS->addons
                         }
                         if (strlen($ip) > 0) {
                             $getCountryCode = function ($ip) {
-                                if ($ip = '127.0.0.1') {
+                                if ($ip === '127.0.0.1') {
                                     return null;
                                 }
                                 $function = require __DIR__ . '/countries-db/result.php';
