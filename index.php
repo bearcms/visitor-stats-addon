@@ -27,8 +27,6 @@ $app->bearCMS->addons
         $addon->initialize = function (array $options) use ($app) {
 
             $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
-            // todo // gclid fbclid
-            $excludeKnownQueryParametersInPageviews = isset($options['excludeKnownQueryParametersInPageviews']) ? (int) $options['excludeKnownQueryParametersInPageviews'] > 0 : true;
             // todo
             $excludeBotsInPageviews = isset($options['excludeBotsInPageviews']) ? (int) $options['excludeBotsInPageviews'] > 0 : true;
 
@@ -54,6 +52,21 @@ $app->bearCMS->addons
                             if (isset($temp['-vssource'])) {
                                 $data['source'] = trim($temp['-vssource']);
                             }
+                        }
+                        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+                        } else {
+                            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+                        }
+                        if (strlen($ip) > 0) {
+                            $getCountryCode = function ($ip) {
+                                if ($ip = '127.0.0.1') {
+                                    return null;
+                                }
+                                $function = require __DIR__ . '/countries-db/result.php';
+                                return $function($ip);
+                            };
+                            $data['country'] = $getCountryCode($ip);
                         }
                     }
                     $app->visitorStats->log($action, $data);
