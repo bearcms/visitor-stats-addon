@@ -27,7 +27,6 @@ $app->bearCMS->addons
         $addon->initialize = function (array $options) use ($app) {
 
             $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
-            // todo
             $excludeBotsInPageviews = isset($options['excludeBotsInPageviews']) ? (int) $options['excludeBotsInPageviews'] > 0 : true;
 
             \BearCMS\Internal\Config::$appSpecificServerData['glzm4a4'] = 1;
@@ -37,39 +36,54 @@ $app->bearCMS->addons
             });
 
             $app->routes
-                ->add('/-vs.js', function () use ($app) {
+                ->add('/-vs.js', function () use ($app, $excludeBotsInPageviews) {
                     $action = isset($_GET['a']) ? trim((string) urldecode((string) $_GET['a'])) : '';
                     $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
                     if (!is_array($data)) {
                         $data = [];
                     }
+                    $cancel = false;
                     if ($action === 'pageview') {
-                        $data['anonymizedUserAgent'] = isset($_SERVER['HTTP_USER_AGENT']) ? preg_replace('/[0-9]/', '*', strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT']))) : 'unknown';
-                        $query = parse_url($data['url'], PHP_URL_QUERY);
-                        if (strlen($query) > 0) {
-                            $temp = null;
-                            parse_str($query, $temp);
-                            if (isset($temp['-vssource'])) {
-                                $data['source'] = trim($temp['-vssource']);
+                        $anonymizedUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? preg_replace('/[0-9]/', '*', strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT']))) : 'unknown';
+                        if ($excludeBotsInPageviews) {
+                            $bots = ['bingpreview', 'googlebot'];
+                            foreach ($bots as $bot) {
+                                if (strpos($anonymizedUserAgent, $bot) !== false) {
+                                    $cancel = true;
+                                    break;
+                                }
                             }
                         }
-                        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-                        } else {
-                            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-                        }
-                        if (strlen($ip) > 0) {
-                            $getCountryCode = function ($ip) {
-                                if ($ip === '127.0.0.1') {
-                                    return null;
+                        if (!$cancel) {
+                            $data['anonymizedUserAgent'] = $anonymizedUserAgent;
+                            $query = parse_url($data['url'], PHP_URL_QUERY);
+                            if (strlen($query) > 0) {
+                                $temp = null;
+                                parse_str($query, $temp);
+                                if (isset($temp['-vssource'])) {
+                                    $data['source'] = trim($temp['-vssource']);
                                 }
-                                $function = require __DIR__ . '/countries-db/result.php';
-                                return $function($ip);
-                            };
-                            $data['country'] = $getCountryCode($ip);
+                            }
+                            if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                                $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+                            } else {
+                                $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+                            }
+                            if (strlen($ip) > 0) {
+                                $getCountryCode = function ($ip) {
+                                    if ($ip === '127.0.0.1') {
+                                        return null;
+                                    }
+                                    $function = require __DIR__ . '/countries-db/result.php';
+                                    return $function($ip);
+                                };
+                                $data['country'] = $getCountryCode($ip);
+                            }
                         }
                     }
-                    $app->visitorStats->log($action, $data);
+                    if (!$cancel) {
+                        $app->visitorStats->log($action, $data);
+                    }
                     $response = new App\Response('{}');
                     $response->headers->set($response->headers->make('Content-Type', 'text/javascript; charset=UTF-8'));
                     $response->headers->set($response->headers->make('Cache-Control', 'no-cache, no-store, must-revalidate'));
