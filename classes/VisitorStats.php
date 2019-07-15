@@ -320,7 +320,7 @@ class VisitorStats
                     }
                 }
                 $limit = $getIntOption('limit');
-                if ($limit !== null) {
+                if ($limit !== null && !empty($temp)) {
                     $temp = array_chunk($temp, $limit, true)[0];
                 }
                 foreach ($temp as $source => $count) {
