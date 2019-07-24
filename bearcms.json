@@ -1,0 +1,17 @@
+{
+    "id": "bearcms/visitor-stats-addon",
+    "name": "Visitor stats",
+    "description": "Creating engaging and useful content is at the core of a successful website, and analyzing how visitors interact with it can help you maximize its value. This addon tracks your website pageviews (respecting your visitors' privacy) and provides the tools needed to analyze it. The administrators' visits (when logged in) are not tracked.",
+    "author": {
+        "name": "Bear CMS",
+        "email": "support@bearcms.com",
+        "url": "https://bearcms.com/"
+    },
+    "media": [
+        {
+            "filename": "/assets/1.png",
+            "width": 1400,
+            "height": 1040
+        }
+    ]
+}

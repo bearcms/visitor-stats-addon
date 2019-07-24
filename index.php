@@ -25,6 +25,9 @@ $app->shortcuts
 $app->bearCMS->addons
     ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
         $addon->initialize = function (array $options) use ($app) {
+            $context = $app->contexts->get(__FILE__);
+
+            $context->assets->addDir('assets');
 
             $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
             $excludeBotsInPageviews = isset($options['excludeBotsInPageviews']) ? (int) $options['excludeBotsInPageviews'] > 0 : true;
