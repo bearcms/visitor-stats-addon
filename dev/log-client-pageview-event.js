@@ -4,7 +4,7 @@
         data["url"] = window.location.toString();
         var referrer = "";
         try {
-            var referrerHost = (new URL(document.referrer)).host;
+            var referrerHost = document.referrer !== '' ? (new URL(document.referrer)).host : '';
             referrer = referrerHost !== window.location ? referrerHost : document.referrer;
         } catch (e) {
         }

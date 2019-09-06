@@ -37,7 +37,7 @@ class VisitorStats
         $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs.js'), '<script>var vsjs="undefined"!==typeof vsjs?vsjs:function(){return{log:function(b,c){"undefined"===typeof b&&(b="");"undefined"===typeof c&&(c={});var a=document.createElement("script");a.type="text/javascript";a.async=!0;a.src="INSERT_URL_HERE?a="+encodeURIComponent(b)+"&d="+encodeURIComponent(JSON.stringify(c));var d=document.getElementsByTagName("script")[0];d.parentNode.insertBefore(a,d)}}}();</script>');
         if ($trackPageview) {
             // taken from dev/log-client-pageview-event.js
-            $htmlToInsert .= '<script>(function(){var a=function(){var b={};b.url=window.location.toString();var a="";try{var c=(new URL(document.referrer)).host;a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();</script>';
+            $htmlToInsert .= '<script>(function(){var a=function(){var b={};b.url=window.location.toString();var a="";try{var c=""!==document.referrer?(new URL(document.referrer)).host:"";a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();</script>';
         }
         $domDocument = new HTML5DOMDocument();
         $domDocument->loadHTML($response->content, HTML5DOMDocument::ALLOW_DUPLICATE_IDS);
