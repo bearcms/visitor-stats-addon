@@ -346,7 +346,7 @@ class VisitorStats
                     if ($type === 'landingPagesCount') {
                         $urlHost = $getHost($itemData['url']);
                         $referrerHost = $getHost($itemData['referrer']);
-                        if ($urlHost !== null && $urlHost !== $referrerHost) {
+                        if ($urlHost !== null && $referrerHost !== null && $urlHost !== $referrerHost) {
                             $path = $getPath($itemData['url']);
                             if (!isset($temp[$path])) {
                                 $temp[$path] = 0;
