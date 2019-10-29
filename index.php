@@ -15,6 +15,7 @@ $app = App::get();
 $context = $app->contexts->get(__FILE__);
 
 $context->classes
+    ->add('BearCMS\VisitorStats\BeforeApplyEventDetails', 'classes/VisitorStats/BeforeApplyEventDetails.php')
     ->add('BearCMS\VisitorStats', 'classes/VisitorStats.php');
 
 $app->shortcuts

@@ -1,7 +1,12 @@
 {
     "name": "bearcms/visitor-stats-addon",
     "description": "Visitor stats addon for Bear CMS",
-    "keywords": ["visitors", "stats", "addon", "Bear Framework"],
+    "keywords": [
+        "visitors",
+        "stats",
+        "addon",
+        "Bear Framework"
+    ],
     "homepage": "https://github.com/bearcms/visitor-stats-addon",
     "license": "MIT",
     "authors": [
@@ -15,13 +20,16 @@
         "php": ">=7.1.0",
         "bearframework/bearframework": "1.*",
         "bearcms/bearframework-addon": "1.*",
-        "ivopetkov/html5-dom-document-php": "2.*"
+        "ivopetkov/html5-dom-document-php": "2.*",
+        "ivopetkov/data-object": "0.7.*"
     },
     "require-dev": {
         "bearframework/addon-tests": "0.3.*",
         "phpunit/phpunit": "7.*"
     },
     "autoload": {
-        "files": ["autoload.php"]
+        "files": [
+            "autoload.php"
+        ]
     }
 }

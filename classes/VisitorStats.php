@@ -9,6 +9,7 @@
 
 namespace BearCMS;
 
+use BearCMS\VisitorStats\BeforeApplyEventDetails;
 use BearFramework\App;
 use IvoPetkov\HTML5DOMDocument;
 
@@ -17,6 +18,7 @@ use IvoPetkov\HTML5DOMDocument;
  */
 class VisitorStats
 {
+    use \BearFramework\EventsTrait;
 
     /**
      *
@@ -27,6 +29,13 @@ class VisitorStats
      */
     public function apply(App\Response $response, array $options = []): void
     {
+        if ($this->hasEventListeners('beforeApply')) {
+            $eventDetails = new BeforeApplyEventDetails($response);
+            $this->dispatchEvent('beforeApply', $eventDetails);
+            if ($eventDetails->preventDefault) {
+                return;
+            }
+        }
         $trackPageview = isset($options['trackPageview']) ? (int) $options['trackPageview'] > 0 : false;
         $app = App::get();
         if ($app->bearCMS->currentUser->exists()) {
