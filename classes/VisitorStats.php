@@ -131,16 +131,16 @@ class VisitorStats
             $urlHost = $getHost($itemData['url']);
             $referrerHost = $getHost($itemData['referrer']);
             if ($urlHost === $referrerHost) {
-                return null;
+                return '-'; // internal link
             }
             if ($referrerHost === null) {
-                return null;
+                return null; // no referrer
             }
             if (mb_substr($referrerHost, 0, 4) === 'www.') {
-                return mb_substr($referrerHost, 4);
+                $referrerHost = mb_substr($referrerHost, 4);
             }
             $groups = [
-                'Google Search' => ['google.com', 'google.bg', 'google.cz'], // todo add all
+                'Google' => ['google.com', 'google.bg', 'google.cz'], // todo add all
                 'Facebook' => ['*.facebook.com'],
                 'Instagram' => ['*.instagram.com'],
                 'Baidu' => ['*.baidu.com'],
@@ -333,7 +333,7 @@ class VisitorStats
                         continue;
                     }
                     $source = $getSource($itemData);
-                    if ($source !== null) {
+                    if ($source !== null && $source !== '-') {
                         if (!isset($temp[$source])) {
                             $temp[$source] = 0;
                         }
