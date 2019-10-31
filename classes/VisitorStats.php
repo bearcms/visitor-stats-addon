@@ -103,6 +103,7 @@ class VisitorStats
             for ($timestamp = $startDate; $timestamp <= $endDate; $timestamp += 86400) {
                 $result[date('Y-m-d', $timestamp)] = true;
             }
+            $result[date('Y-m-d', $endDate)] = true;
             return array_keys($result);
         };
 
