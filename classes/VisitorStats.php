@@ -138,6 +138,25 @@ class VisitorStats
             if (mb_substr($referrerHost, 0, 4) === 'www.') {
                 return mb_substr($referrerHost, 4);
             }
+            $groups = [
+                'Google Search' => ['google.com', 'google.bg', 'google.cz'], // todo add all
+                'Facebook' => ['*.facebook.com'],
+                'Instagram' => ['*.instagram.com'],
+                'Baidu' => ['*.baidu.com'],
+                'Bing' => ['*.bing.com'],
+                'Yandex' => ['*.yandex.ru'],
+                'abv.bg' => ['*.abv.bg']
+            ];
+            foreach ($groups as $name => $items) {
+                foreach ($items as $item) {
+                    if ($item === $referrerHost) {
+                        return $name;
+                    }
+                    if (substr($item, 0, 2) === '*.' && substr($referrerHost, -(strlen($item) - 2)) === substr($item, 2)) {
+                        return $name;
+                    }
+                }
+            }
             return $referrerHost;
         };
 
