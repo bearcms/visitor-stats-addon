@@ -21,7 +21,7 @@
         "bearframework/bearframework": "1.*",
         "bearcms/bearframework-addon": "1.*",
         "ivopetkov/html5-dom-document-php": "2.*",
-        "ivopetkov/data-object": "0.7.*"
+        "ivopetkov/data-object": "0.7.*|0.8.*"
     },
     "require-dev": {
         "bearframework/addon-tests": "0.3.*",
