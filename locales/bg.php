@@ -7,8 +7,6 @@
  * Free to use under the MIT license.
  */
 
-BearFramework\Addons::register('bearcms/visitor-stats-addon', __DIR__, [
-    'require' => [
-        'bearframework/localization-addon'
-    ]
-]);
+return [
+    'bearcms.visitor-stats-addon.search engine' => 'търсачка'
+];

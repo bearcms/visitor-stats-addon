@@ -23,6 +23,18 @@ $app->shortcuts
         return new VisitorStats();
     });
 
+$app->localization
+    ->addDictionary('en', function () use ($context) {
+        return include $context->dir . '/locales/en.php';
+    })
+    ->addDictionary('bg', function () use ($context) {
+        return include $context->dir . '/locales/bg.php';
+    })
+    ->addDictionary('ru', function () use ($context) {
+        return include $context->dir . '/locales/ru.php';
+    });
+
+
 $app->bearCMS->addons
     ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
         $addon->initialize = function (array $options) use ($app) {
