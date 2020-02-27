@@ -1,7 +1,7 @@
 (function () {
     var log = function () {
         var data = {};
-        data["url"] = window.location.toString();
+        data["url"] = vsjs.originalURL;
         var referrer = "";
         try {
             var referrerHost = document.referrer !== '' ? (new URL(document.referrer)).host : '';

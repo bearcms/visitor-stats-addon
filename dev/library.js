@@ -1,6 +1,14 @@
 var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
+    var url = window.location.href;
+    if (url.indexOf('?-vssource') !== -1) {
+        try {
+            history.replaceState({}, "", url.replace(/\?-vssource=.*?&/, '?').replace(/&-vssource=.*?&/, '&').replace(/\?-vssource=.*/, '').replace(/&-vssource=.*/, ''));
+        } catch (e) {
+
+        }
+    }
     return {
-        "log": function (action, data) {
+        'log': function (action, data) {
             if (typeof action === "undefined") {
                 action = "";
             }
@@ -13,6 +21,7 @@ var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
             script.src = "INSERT_URL_HERE?a=" + encodeURIComponent(action) + "&d=" + encodeURIComponent(JSON.stringify(data));
             var element = document.getElementsByTagName("script")[0];
             element.parentNode.insertBefore(script, element);
-        }
+        },
+        'originalURL': url
     };
 }());

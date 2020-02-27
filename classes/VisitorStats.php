@@ -42,11 +42,14 @@ class VisitorStats
             return;
         }
         $htmlToInsert = '';
-        // taken from dev/library.js
-        $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs.js'), '<script>var vsjs="undefined"!==typeof vsjs?vsjs:function(){return{log:function(b,c){"undefined"===typeof b&&(b="");"undefined"===typeof c&&(c={});var a=document.createElement("script");a.type="text/javascript";a.async=!0;a.src="INSERT_URL_HERE?a="+encodeURIComponent(b)+"&d="+encodeURIComponent(JSON.stringify(c));var d=document.getElementsByTagName("script")[0];d.parentNode.insertBefore(a,d)}}}();</script>');
+        //$html = file_get_contents(__DIR__ . '/../dev/library.js');
+        $js = 'var vsjs="undefined"!==typeof vsjs?vsjs:function(){var a=window.location.href;if(-1!==a.indexOf("?-vssource"))try{history.replaceState({},"",a.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""))}catch(b){}return{log:function(b,a){"undefined"===typeof b&&(b="");"undefined"===typeof a&&(a={});var c=document.createElement("script");c.type="text/javascript";c.async=!0;c.src="INSERT_URL_HERE?a="+encodeURIComponent(b)+"&d="+encodeURIComponent(JSON.stringify(a));
+        var d=document.getElementsByTagName("script")[0];d.parentNode.insertBefore(c,d)},originalURL:a}}();';
+        $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs.js'), '<script>' . $js . '</script>');
         if ($trackPageview) {
-            // taken from dev/log-client-pageview-event.js
-            $htmlToInsert .= '<script>(function(){var a=function(){var b={};b.url=window.location.toString();var a="";try{var c=""!==document.referrer?(new URL(document.referrer)).host:"";a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();</script>';
+            //$html = file_get_contents(__DIR__ . '/../dev/log-client-pageview-event.js');
+            $js = '(function(){var a=function(){var b={};b.url=vsjs.originalURL;var a="";try{var c=""!==document.referrer?(new URL(document.referrer)).host:"";a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();';
+            $htmlToInsert .= '<script>' . $js . '</script>';
         }
         $domDocument = new HTML5DOMDocument();
         $domDocument->loadHTML($response->content, HTML5DOMDocument::ALLOW_DUPLICATE_IDS);
@@ -81,7 +84,10 @@ class VisitorStats
         $dataToWrite[] = $action;
         $dataToWrite[] = $data;
 
-        $app->data->append('bearcms-visitor-stats/' . date('Y-m-d') . '.jsonlist', json_encode($dataToWrite) . "\n");
+        $dataToWrite = json_encode($dataToWrite);
+        if (strlen($dataToWrite) < 10000) {
+            $app->data->append('bearcms-visitor-stats/' . date('Y-m-d') . '.jsonlist', $dataToWrite . "\n");
+        }
     }
 
 
