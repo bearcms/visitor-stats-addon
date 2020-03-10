@@ -62,7 +62,7 @@ $app->bearCMS->addons
                     if ($action === 'pageview') {
                         $anonymizedUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? preg_replace('/[0-9]/', '*', strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT']))) : 'unknown';
                         if ($excludeBotsInPageviews) {
-                            $bots = ['bingpreview', 'googlebot', 'msnbot', 'adsbot-google', 'yandexbot', 'yandexmobilebot'];
+                            $bots = ['bingpreview', 'googlebot', 'msnbot', 'adsbot-google', 'yandexbot', 'yandexmobilebot', 'pinterestbot', 'ahrefsbot', 'duckduckbot', 'smtbot'];
                             foreach ($bots as $bot) {
                                 if (strpos($anonymizedUserAgent, $bot) !== false) {
                                     $cancel = true;
