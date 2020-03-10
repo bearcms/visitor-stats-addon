@@ -62,7 +62,7 @@ $app->bearCMS->addons
                     if ($action === 'pageview') {
                         $anonymizedUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? preg_replace('/[0-9]/', '*', strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT']))) : 'unknown';
                         if ($excludeBotsInPageviews) {
-                            $bots = ['googlebot', 'adsbot-google', 'msnbot', 'bingpreview', 'yandexbot', 'yandexmobilebot'];
+                            $bots = ['bingpreview', 'googlebot', 'msnbot', 'adsbot-google', 'yandexbot', 'yandexmobilebot'];
                             foreach ($bots as $bot) {
                                 if (strpos($anonymizedUserAgent, $bot) !== false) {
                                     $cancel = true;
@@ -97,6 +97,7 @@ $app->bearCMS->addons
                                 };
                                 $data['country'] = $getCountryCode($ip);
                             }
+                            $data['deviceType'] = strpos($anonymizedUserAgent, 'mobi') !== false ? 'mobile' : 'desktop';
                         }
                     }
                     if (!$cancel) {
