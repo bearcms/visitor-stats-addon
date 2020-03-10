@@ -63,10 +63,10 @@ class VisitorStatsTest extends BearFramework\AddonTests\PHPUnitTestCase
     public function testGetStats()
     {
         $app = $this->getApp();
-        $app->visitorStats->log('pageview', ['url' => 'http://example.com/']); // session start
-        $app->visitorStats->log('pageview', ['url' => 'http://example.com/', 'referrer' => '']); // session start
-        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://example.com/']);
-        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'example.com']);
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/', 'referrer' => '', 'deviceType' => 'mobile']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/', 'referrer' => '', 'country' => 'us', 'deviceType' => 'mobile']); // session start
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'http://example.com/', 'country' => 'de', 'deviceType' => 'desktop']);
+        $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'example.com', 'country' => 'de', 'deviceType' => 'desktop']);
         $app->visitorStats->log('pageview', ['url' => 'http://example.com/services/', 'referrer' => 'http://google.com/']); // session start
         $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'google.com']); // session start
         $app->visitorStats->log('pageview', ['url' => 'http://example.com/products/', 'referrer' => 'bing.com']); // session start
@@ -82,12 +82,17 @@ class VisitorStatsTest extends BearFramework\AddonTests\PHPUnitTestCase
             ['type' => 'sourcesVisitsCount', 'from' => $from, 'to' => $to],
             ['type' => 'landingPagesCount', 'from' => $from, 'to' => $to],
             ['type' => 'pageviewsPerPageCount', 'from' => $from, 'to' => $to],
+            ['type' => 'deviceTypesPageviewsCount', 'from' => $from, 'to' => $to],
+            ['type' => 'countriesPageviewsCount', 'from' => $from, 'to' => $to],
         ]);
+        // todo improve
         $this->assertTrue(!empty($result['lastPageviews']));
         $this->assertTrue(!empty($result['pageviewsPerDayCount']));
         $this->assertTrue(!empty($result['sessionsPerDayCount']));
         $this->assertTrue(!empty($result['sourcesVisitsCount']));
         $this->assertTrue(!empty($result['landingPagesCount']));
         $this->assertTrue(!empty($result['pageviewsPerPageCount']));
+        $this->assertTrue(!empty($result['deviceTypesPageviewsCount']));
+        $this->assertTrue(!empty($result['countriesPageviewsCount']));
     }
 }

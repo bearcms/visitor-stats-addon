@@ -175,6 +175,20 @@ class VisitorStats
             return $referrerHost;
         };
 
+        $getDeviceType = function (array $itemData): ?string {
+            if (isset($itemData['deviceType']) && strlen($itemData['deviceType']) > 0) {
+                return $itemData['deviceType'];
+            }
+            return null;
+        };
+
+        $getCountry = function (array $itemData): ?string {
+            if (isset($itemData['country']) && strlen($itemData['country']) > 0) {
+                return $itemData['country'];
+            }
+            return null;
+        };
+
         $getAvailableDateCodes = function () use ($app) {
             $list = $app->data->getList()
                 ->filterBy('key', 'bearcms-visitor-stats/', 'startWith')
@@ -199,7 +213,7 @@ class VisitorStats
             });
         };
 
-        $get = function (string $type, array $options) use ($getHost, $getPath, $getSource, $getAvailableDateCodes, $sortDataByTime, $calculateIntervalDateCodes) {
+        $get = function (string $type, array $options) use ($getHost, $getPath, $getSource, $getDeviceType, $getCountry, $getAvailableDateCodes, $sortDataByTime, $calculateIntervalDateCodes) {
             $result = [];
 
             $isPageview = function ($item) {
@@ -226,13 +240,17 @@ class VisitorStats
                 return isset($options['sortByCount']) ? (array_search($options['sortByCount'], ['asc', 'desc']) !== false ? $options['sortByCount'] : null) : null;
             };
 
-            if ($type === 'lastPageviews' || $type === 'lastPageviewsPerPath' || $type === 'lastPageviewsPerSource') {
+            if ($type === 'lastPageviews' || $type === 'lastPageviewsPerPath' || $type === 'lastPageviewsPerSource' || $type === 'lastPageviewsPerDeviceType' || $type === 'lastPageviewsPerCountry') {
                 $limit = $getIntOption('limit');
                 $dateCodes = $getAvailableDateCodes();
                 if ($type === 'lastPageviewsPerPath') {
                     $pathOption = $this->fixEncoding($getStringOption('path'));
                 } elseif ($type === 'lastPageviewsPerSource') {
                     $sourceOption = $getStringOption('source');
+                } elseif ($type === 'lastPageviewsPerDeviceType') {
+                    $deviceTypeOption = $getStringOption('deviceType');
+                } elseif ($type === 'lastPageviewsPerCountry') {
+                    $countryOption = $getStringOption('country');
                 }
                 rsort($dateCodes);
                 foreach ($dateCodes as $dateCode) {
@@ -247,6 +265,8 @@ class VisitorStats
                         $urlHost = $getHost($itemData['url']);
                         $path = $getPath($itemData['url']);
                         $source = $getSource($itemData);
+                        $deviceType = $getDeviceType($itemData);
+                        $country = $getCountry($itemData);
                         if ($type === 'lastPageviewsPerPath') {
                             if ($path !== null && $path !== $pathOption) {
                                 continue;
@@ -255,11 +275,21 @@ class VisitorStats
                             if ($source === null || $source !== $sourceOption) {
                                 continue;
                             }
+                        } elseif ($type === 'lastPageviewsPerDeviceType') {
+                            if ($deviceType === null || $deviceType !== $deviceTypeOption) {
+                                continue;
+                            }
+                        } elseif ($type === 'lastPageviewsPerCountry') {
+                            if ($country === null || $country !== $countryOption) {
+                                continue;
+                            }
                         }
                         $result[] = [
                             'datetime' => $item[0],
                             'path' => $path,
-                            'source' => $source
+                            'source' => $source,
+                            'deviceType' => $deviceType,
+                            'country' => $country
                         ];
                         if ($limit !== null && sizeof($result) === $limit) {
                             $break = true;
@@ -270,7 +300,7 @@ class VisitorStats
                         break;
                     }
                 }
-            } elseif ($type === 'pageviewsPerDayCount' || $type === 'sessionsPerDayCount' || $type === 'pageviewsPerDayPerPageCount' || $type === 'pageviewsPerDayPerSourceCount') {
+            } elseif ($type === 'pageviewsPerDayCount' || $type === 'sessionsPerDayCount' || $type === 'pageviewsPerDayPerPageCount' || $type === 'pageviewsPerDayPerSourceCount' || $type === 'pageviewsPerDayPerCountryCount' || $type === 'pageviewsPerDayPerDeviceTypeCount') {
                 $from = $getFromOption();
                 $to = $getToOption();
                 $dateCodes = $calculateIntervalDateCodes($from, $to);
@@ -278,6 +308,10 @@ class VisitorStats
                     $pathOption = $this->fixEncoding($getStringOption('path'));
                 } elseif ($type === 'pageviewsPerDayPerSourceCount') {
                     $sourceOption = $getStringOption('source');
+                } elseif ($type === 'pageviewsPerDayPerDeviceTypeCount') {
+                    $deviceTypeOption = $getStringOption('deviceType');
+                } elseif ($type === 'pageviewsPerDayPerCountryCount') {
+                    $countryOption = $getStringOption('country');
                 }
                 $data = $this->getData($dateCodes);
                 $temp = [];
@@ -303,6 +337,16 @@ class VisitorStats
                     } elseif ($type === 'pageviewsPerDayPerSourceCount') {
                         $source = $getSource($itemData);
                         if ($source === null || $source !== $sourceOption) {
+                            continue;
+                        }
+                    } elseif ($type === 'pageviewsPerDayPerDeviceTypeCount') {
+                        $deviceType = $getDeviceType($itemData);
+                        if ($deviceType === null || $deviceType !== $deviceTypeOption) {
+                            continue;
+                        }
+                    } elseif ($type === 'pageviewsPerDayPerCountryCount') {
+                        $country = $getCountry($itemData);
+                        if ($country === null || $country !== $countryOption) {
                             continue;
                         }
                     }
@@ -333,11 +377,22 @@ class VisitorStats
                     ];
                 }
                 unset($temp);
-            } elseif ($type === 'sourcesVisitsCount') {
+            } elseif ($type === 'sourcesVisitsCount' || $type === 'landingPagesCount' || $type === 'pageviewsPerPageCount' || $type === 'deviceTypesPageviewsCount' || $type === 'countriesPageviewsCount') {
                 $from = $getFromOption();
                 $to = $getToOption();
                 $data = $this->getData($calculateIntervalDateCodes($from, $to));
                 $temp = [];
+                if ($type === 'sourcesVisitsCount') {
+                    $tempPropertyName = 'source';
+                } elseif ($type === 'landingPagesCount') {
+                    $tempPropertyName = 'path';
+                } elseif ($type === 'pageviewsPerPageCount') {
+                    $tempPropertyName = 'path';
+                } elseif ($type === 'deviceTypesPageviewsCount') {
+                    $tempPropertyName = 'deviceType';
+                } elseif ($type === 'countriesPageviewsCount') {
+                    $tempPropertyName = 'country';
+                }
                 foreach ($data as $item) {
                     $itemData = $item[2];
                     if (!$isPageview($item)) {
@@ -346,47 +401,15 @@ class VisitorStats
                     if ($item[0] < $from || $item[0] > $to) {
                         continue;
                     }
-                    $source = $getSource($itemData);
-                    if ($source !== null && $source !== '-') {
-                        if (!isset($temp[$source])) {
-                            $temp[$source] = 0;
+                    if ($type === 'sourcesVisitsCount') {
+                        $source = $getSource($itemData);
+                        if ($source !== null && $source !== '-') {
+                            if (!isset($temp[$source])) {
+                                $temp[$source] = 0;
+                            }
+                            $temp[$source]++;
                         }
-                        $temp[$source]++;
-                    }
-                }
-                $sortByCount = $getSortByCountOption();
-                if ($sortByCount !== null) {
-                    if ($sortByCount === 'desc') {
-                        arsort($temp);
-                    } else {
-                        asort($temp);
-                    }
-                }
-                $limit = $getIntOption('limit');
-                if ($limit !== null && !empty($temp)) {
-                    $temp = array_chunk($temp, $limit, true)[0];
-                }
-                foreach ($temp as $source => $count) {
-                    $result[] = [
-                        'source' => $source,
-                        'count' => $count
-                    ];
-                }
-                unset($temp);
-            } elseif ($type === 'landingPagesCount' || $type === 'pageviewsPerPageCount') {
-                $from = $getFromOption();
-                $to = $getToOption();
-                $data = $this->getData($calculateIntervalDateCodes($from, $to));
-                $temp = [];
-                foreach ($data as $item) {
-                    $itemData = $item[2];
-                    if (!$isPageview($item)) {
-                        continue;
-                    }
-                    if ($item[0] < $from || $item[0] > $to) {
-                        continue;
-                    }
-                    if ($type === 'landingPagesCount') {
+                    } elseif ($type === 'landingPagesCount') {
                         $urlHost = $getHost($itemData['url']);
                         $referrerHost = $getHost($itemData['referrer']);
                         if ($urlHost !== null && $referrerHost !== null && $urlHost !== $referrerHost) {
@@ -402,6 +425,18 @@ class VisitorStats
                             $temp[$path] = 0;
                         }
                         $temp[$path]++;
+                    } elseif ($type === 'deviceTypesPageviewsCount') {
+                        $deviceType = $getDeviceType($itemData);
+                        if (!isset($temp[$deviceType])) {
+                            $temp[$deviceType] = 0;
+                        }
+                        $temp[$deviceType]++;
+                    } elseif ($type === 'countriesPageviewsCount') {
+                        $country = $getCountry($itemData);
+                        if (!isset($temp[$country])) {
+                            $temp[$country] = 0;
+                        }
+                        $temp[$country]++;
                     }
                 }
                 $sortByCount = $getSortByCountOption();
@@ -416,9 +451,9 @@ class VisitorStats
                 if ($limit !== null && !empty($temp)) {
                     $temp = array_chunk($temp, $limit, true)[0];
                 }
-                foreach ($temp as $path => $count) {
+                foreach ($temp as $name => $count) {
                     $result[] = [
-                        'path' => $path,
+                        $tempPropertyName => $name,
                         'count' => $count
                     ];
                 }
