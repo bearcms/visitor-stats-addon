@@ -220,8 +220,8 @@ class VisitorStats
                 return $item[1] === 'pageview' && isset($item[2]['url'], $item[2]['referrer']);
             };
 
-            $getStringOption = function (string $name) use ($options): ?string {
-                return isset($options[$name]) ? (string) $options[$name] : null;
+            $getStringOption = function (string $name) use ($options): string {
+                return isset($options[$name]) ? (string) $options[$name] : '';
             };
 
             $getIntOption = function (string $name) use ($options): ?int {
@@ -272,15 +272,15 @@ class VisitorStats
                                 continue;
                             }
                         } elseif ($type === 'lastPageviewsPerSource') {
-                            if ($source === null || $source !== $sourceOption) {
+                            if ((string) $source !== $sourceOption) {
                                 continue;
                             }
                         } elseif ($type === 'lastPageviewsPerDeviceType') {
-                            if ($deviceType === null || $deviceType !== $deviceTypeOption) {
+                            if ((string) $deviceType !== $deviceTypeOption) {
                                 continue;
                             }
                         } elseif ($type === 'lastPageviewsPerCountry') {
-                            if ($country === null || $country !== $countryOption) {
+                            if ((string) $country !== $countryOption) {
                                 continue;
                             }
                         }
@@ -330,23 +330,19 @@ class VisitorStats
                             continue;
                         }
                     } elseif ($type === 'pageviewsPerDayPerPageCount') {
-                        $path = $getPath($itemData['url']);
-                        if ($path !== null && $path !== $pathOption) {
+                        if ((string) $getPath($itemData['url']) !== $pathOption) {
                             continue;
                         }
                     } elseif ($type === 'pageviewsPerDayPerSourceCount') {
-                        $source = $getSource($itemData);
-                        if ($source === null || $source !== $sourceOption) {
+                        if ((string) $getSource($itemData) !== $sourceOption) {
                             continue;
                         }
                     } elseif ($type === 'pageviewsPerDayPerDeviceTypeCount') {
-                        $deviceType = $getDeviceType($itemData);
-                        if ($deviceType === null || $deviceType !== $deviceTypeOption) {
+                        if ((string) $getDeviceType($itemData) !== $deviceTypeOption) {
                             continue;
                         }
                     } elseif ($type === 'pageviewsPerDayPerCountryCount') {
-                        $country = $getCountry($itemData);
-                        if ($country === null || $country !== $countryOption) {
+                        if ((string) $getCountry($itemData) !== $countryOption) {
                             continue;
                         }
                     }
