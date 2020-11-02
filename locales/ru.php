@@ -8,5 +8,6 @@
  */
 
 return [
-    'bearcms.visitor-stats-addon.search engine' => 'поисковый движок'
+    'bearcms.visitor-stats-addon.search engine' => 'поисковый движок',
+    'bearcms.visitor-stats-addon.application' => 'применение'
 ];

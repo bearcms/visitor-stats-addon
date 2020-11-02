@@ -8,5 +8,6 @@
  */
 
 return [
-    'bearcms.visitor-stats-addon.search engine' => 'search engine'
+    'bearcms.visitor-stats-addon.search engine' => 'search engine',
+    'bearcms.visitor-stats-addon.application' => 'application'
 ];

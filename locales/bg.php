@@ -8,5 +8,6 @@
  */
 
 return [
-    'bearcms.visitor-stats-addon.search engine' => 'търсачка'
+    'bearcms.visitor-stats-addon.search engine' => 'търсачка',
+    'bearcms.visitor-stats-addon.application' => 'приложение'
 ];
