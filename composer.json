@@ -22,7 +22,7 @@
         "bearcms/bearframework-addon": "1.*",
         "bearframework/localization-addon": "0.2.*",
         "ivopetkov/html5-dom-document-php": "2.*",
-        "ivopetkov/data-object": "0.7.*|0.8.*"
+        "ivopetkov/data-object": "0.7.*|0.8.*|0.9.*"
     },
     "require-dev": {
         "bearframework/addon-tests": "0.3.*",
