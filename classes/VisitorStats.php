@@ -42,13 +42,12 @@ class VisitorStats
             return;
         }
         $htmlToInsert = '';
-        //$html = file_get_contents(__DIR__ . '/../dev/library.js');
-        $js = 'var vsjs="undefined"!==typeof vsjs?vsjs:function(){var a=window.location.href;if(-1!==a.indexOf("?-vssource"))try{history.replaceState({},"",a.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""))}catch(b){}return{log:function(b,a){"undefined"===typeof b&&(b="");"undefined"===typeof a&&(a={});var c=document.createElement("script");c.type="text/javascript";c.async=!0;c.src="INSERT_URL_HERE?a="+encodeURIComponent(b)+"&d="+encodeURIComponent(JSON.stringify(a));
-        var d=document.getElementsByTagName("script")[0];d.parentNode.insertBefore(c,d)},originalURL:a}}();';
+        //$js = file_get_contents(__DIR__ . '/../dev/library.js');
+        $js = 'var vsjs="undefined"!==typeof vsjs?vsjs:function(){var b=originalURL=window.location.href;if(-1!==b.indexOf("-vssource"))try{b=b.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""),history.replaceState({},"",b)}catch(a){}return{log:function(a,d){"undefined"===typeof a&&(a="");"undefined"===typeof d&&(d={});var c=document.createElement("script");c.type="text/javascript";c.async=!0;c.src="INSERT_URL_HERE?a="+encodeURIComponent(a)+"&d="+encodeURIComponent(JSON.stringify(d))+"&u="+encodeURIComponent("undefined"!==typeof navigator.userAgent?navigator.userAgent:"");var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(c,e)},getSource:function(){var a=new URL(originalURL);return"undefined"!==typeof a.searchParams?a.searchParams.get("-vssource"):null},getURL:function(){return b}}}();';
         $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs.js'), '<script>' . $js . '</script>');
         if ($trackPageview) {
-            //$html = file_get_contents(__DIR__ . '/../dev/log-client-pageview-event.js');
-            $js = '(function(){var a=function(){var b={};b.url=vsjs.originalURL;var a="";try{var c=""!==document.referrer?(new URL(document.referrer)).host:"";a=c!==window.location?c:document.referrer}catch(d){}b.referrer=a;vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",a):a()})();';
+            //$js = file_get_contents(__DIR__ . '/../dev/log-client-pageview-event.js');
+            $js = '(function(){var d=function(){var b={};b.url=vsjs.getURL();var a=vsjs.getSource();null!==a&&(b.source=a);a="";try{var c=""!==document.referrer?(new URL(document.referrer)).host:"";a=c!==window.location?c:document.referrer}catch(e){}0<a.length&&(b.referrer=a);vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",d):d()})();';
             $htmlToInsert .= '<script>' . $js . '</script>';
         }
         $domDocument = new HTML5DOMDocument();

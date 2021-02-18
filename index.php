@@ -77,16 +77,16 @@ $app->bearCMS->addons
                         }
                         if (!$cancel) {
                             $data['anonymizedUserAgent'] = $anonymizedUserAgent;
-                            if (isset($data['url'])) {
-                                $query = parse_url($data['url'], PHP_URL_QUERY);
-                                if (strlen($query) > 0) {
-                                    $temp = null;
-                                    parse_str($query, $temp);
-                                    if (isset($temp['-vssource'])) {
-                                        $data['source'] = trim($temp['-vssource']);
-                                    }
-                                }
-                            }
+                            // if (isset($data['url'])) {
+                            //     $query = parse_url($data['url'], PHP_URL_QUERY);
+                            //     if (strlen($query) > 0) {
+                            //         $temp = null;
+                            //         parse_str($query, $temp);
+                            //         if (isset($temp['-vssource'])) {
+                            //             $data['source'] = trim($temp['-vssource']);
+                            //         }
+                            //     }
+                            // }
                             if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
                                 $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
                             } else {
