@@ -18,7 +18,7 @@ var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
             var script = document.createElement("script");
             script.type = "text/javascript";
             script.async = true;
-            script.src = "INSERT_URL_HERE?a=" + encodeURIComponent(action) + "&d=" + encodeURIComponent(JSON.stringify(data));
+            script.src = "INSERT_URL_HERE?a=" + encodeURIComponent(action) + "&d=" + encodeURIComponent(JSON.stringify(data)) + "&u=" + encodeURIComponent(typeof navigator.userAgent !== 'undefined' ? navigator.userAgent : '');
             var element = document.getElementsByTagName("script")[0];
             element.parentNode.insertBefore(script, element);
         },

@@ -55,16 +55,21 @@ $app->bearCMS->addons
                 ->add('/-vs.js', function () use ($app, $excludeBotsInPageviews) {
                     $action = isset($_GET['a']) ? trim((string) urldecode((string) $_GET['a'])) : '';
                     $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
+                    $userAgent = isset($_GET['u']) ? trim(strtolower(str_replace(' ', '', (string) $_GET['u']))) : '';
                     if (!is_array($data)) {
                         $data = [];
                     }
                     $cancel = false;
                     if ($action === 'pageview') {
-                        $anonymizedUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? preg_replace('/[0-9]/', '*', strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT']))) : 'unknown';
+                        $serverUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT'])) : '';
+                        $anonymizedUserAgent = preg_replace('/[0-9]/', '*', $userAgent !== '' ? $userAgent : $serverUserAgent);
+                        if ($anonymizedUserAgent === '') {
+                            $anonymizedUserAgent = 'unknown';
+                        }
                         if ($excludeBotsInPageviews) {
                             $bots = ['bingpreview', 'googlebot', 'msnbot', 'adsbot-google', 'yandexbot', 'yandexmobilebot', 'pinterestbot', 'ahrefsbot', 'duckduckbot', 'smtbot'];
                             foreach ($bots as $bot) {
-                                if (strpos($anonymizedUserAgent, $bot) !== false) {
+                                if (strpos($anonymizedUserAgent, $bot) !== false || strpos($serverUserAgent, $bot) !== false) {
                                     $cancel = true;
                                     break;
                                 }
