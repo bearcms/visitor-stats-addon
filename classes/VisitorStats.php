@@ -134,7 +134,7 @@ class VisitorStats
                 return $itemData['source'];
             }
             $urlHost = $getHost($itemData['url']);
-            $referrerHost = $getHost($itemData['referrer']);
+            $referrerHost = isset($itemData['referrer']) ? $getHost($itemData['referrer']) : null;
             if ($urlHost === $referrerHost) {
                 return '-'; // internal link
             }
@@ -226,7 +226,7 @@ class VisitorStats
             $result = [];
 
             $isPageview = function ($item) {
-                return $item[1] === 'pageview' && isset($item[2]['url'], $item[2]['referrer']);
+                return $item[1] === 'pageview' && isset($item[2]['url']);
             };
 
             $getStringOption = function (string $name) use ($options): string {
@@ -334,7 +334,7 @@ class VisitorStats
                     }
                     if ($type === 'sessionsPerDayCount') {
                         $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
+                        $referrerHost = isset($itemData['referrer']) ? $getHost($itemData['referrer']) : null;
                         if ($referrerHost === null || $urlHost === $referrerHost) {
                             continue;
                         }
@@ -416,7 +416,7 @@ class VisitorStats
                         }
                     } elseif ($type === 'landingPagesCount') {
                         $urlHost = $getHost($itemData['url']);
-                        $referrerHost = $getHost($itemData['referrer']);
+                        $referrerHost = isset($itemData['referrer']) ? $getHost($itemData['referrer']) : null;
                         if ($urlHost !== null && $referrerHost !== null && $urlHost !== $referrerHost) {
                             $path = $getPath($itemData['url']);
                             if (!isset($temp[$path])) {
