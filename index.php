@@ -34,7 +34,6 @@ $app->localization
         return include $context->dir . '/locales/ru.php';
     });
 
-
 $app->bearCMS->addons
     ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
         $addon->initialize = function (array $options) use ($app) {
