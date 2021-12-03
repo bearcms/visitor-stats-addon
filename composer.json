@@ -25,7 +25,7 @@
         "ivopetkov/data-object": "1.*"
     },
     "require-dev": {
-        "bearframework/addon-tests": "1.*"
+        "bearcms/addon-tests": "1.*"
     },
     "autoload": {
         "files": [
