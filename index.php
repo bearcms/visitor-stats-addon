@@ -18,28 +18,28 @@ $context->classes
     ->add('BearCMS\VisitorStats\BeforeApplyEventDetails', 'classes/VisitorStats/BeforeApplyEventDetails.php')
     ->add('BearCMS\VisitorStats', 'classes/VisitorStats.php');
 
-$app->shortcuts
-    ->add('visitorStats', function () {
-        return new VisitorStats();
-    });
-
-$app->localization
-    ->addDictionary('en', function () use ($context) {
-        return include $context->dir . '/locales/en.php';
-    })
-    ->addDictionary('bg', function () use ($context) {
-        return include $context->dir . '/locales/bg.php';
-    })
-    ->addDictionary('ru', function () use ($context) {
-        return include $context->dir . '/locales/ru.php';
-    });
-
 $app->bearCMS->addons
     ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
         $addon->initialize = function (array $options) use ($app) {
             $context = $app->contexts->get(__FILE__);
 
             $context->assets->addDir('assets');
+
+            $app->shortcuts
+                ->add('visitorStats', function () {
+                    return new VisitorStats();
+                });
+
+            $app->localization
+                ->addDictionary('en', function () use ($context) {
+                    return include $context->dir . '/locales/en.php';
+                })
+                ->addDictionary('bg', function () use ($context) {
+                    return include $context->dir . '/locales/bg.php';
+                })
+                ->addDictionary('ru', function () use ($context) {
+                    return include $context->dir . '/locales/ru.php';
+                });
 
             $autoTrackPageviews = isset($options['autoTrackPageviews']) ? (int) $options['autoTrackPageviews'] > 0 : true;
             $excludeBotsInPageviews = isset($options['excludeBotsInPageviews']) ? (int) $options['excludeBotsInPageviews'] > 0 : true;
