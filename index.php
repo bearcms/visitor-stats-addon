@@ -23,6 +23,8 @@ $app->bearCMS->addons
         $addon->initialize = function (array $options) use ($app) {
             $context = $app->contexts->get(__FILE__);
 
+            \BearCMS\Internal\Config::$robotsTxtDisallow[] = '/-vs.js';
+
             $context->assets->addDir('assets');
 
             $app->shortcuts
