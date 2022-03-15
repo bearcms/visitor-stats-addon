@@ -169,7 +169,9 @@ class VisitorStats
                 'Twitter' => ['*.twitter.com', 't.co'],
                 'GitHub' => ['*.github.com'],
                 'Slack' => ['*.slack.com', 'com.slack'],
-                'Telegram (' . $textApp . ')' => ['org.telegram.messenger']
+                'Telegram (' . $textApp . ')' => ['org.telegram.messenger'],
+                'Microsoft Teams' => ['teams.microsoft.com'],
+                'Google Classroom' => ['classroom.google.com'],
             ];
             foreach ($groups as $name => $items) {
                 foreach ($items as $item) {
