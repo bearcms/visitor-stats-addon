@@ -53,7 +53,7 @@ $app->bearCMS->addons
             });
 
             $app->routes
-                ->add('/-vs.js', function () use ($app, $excludeBotsInPageviews) {
+                ->add('/-vs.js', function (App\Request $request) use ($app, $excludeBotsInPageviews) {
                     $action = isset($_GET['a']) ? trim((string) urldecode((string) $_GET['a'])) : '';
                     $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
                     $userAgent = isset($_GET['u']) ? trim(strtolower(str_replace(' ', '', (string) $_GET['u']))) : '';
@@ -88,11 +88,7 @@ $app->bearCMS->addons
                             //         }
                             //     }
                             // }
-                            if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                                $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-                            } else {
-                                $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-                            }
+                            $ip = (string)$request->client->ip;
                             if (strlen($ip) > 0) {
                                 $getCountryCode = function ($ip) {
                                     if ($ip === '127.0.0.1') {
