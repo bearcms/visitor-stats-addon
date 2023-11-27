@@ -153,7 +153,7 @@ class VisitorStats
                 'Instagram' => ['*.instagram.com'],
                 'Baidu' => ['*.baidu.com'],
                 'Bing (' . $textSearchEngine . ')' => ['*.bing.com'],
-                'Yandex' => ['*.yandex.ru'],
+                'Yandex' => ['*.yandex.ru', '*.yandex.com'],
                 'Abv.bg' => ['*.abv.bg'],
                 'Mail.bg' => ['*.mail.bg'],
                 'LinkedIn' => ['linkedin.com'],
@@ -172,6 +172,7 @@ class VisitorStats
                 'Telegram (' . $textApp . ')' => ['org.telegram.messenger'],
                 'Microsoft Teams' => ['teams.microsoft.com'],
                 'Google Classroom' => ['classroom.google.com'],
+                'Google Ads' => ['*.g.doubleclick.net', 'imasdk.googleapis.com', 'doubleclick.net', '*.googlesyndication.com'],
             ];
             foreach ($groups as $name => $items) {
                 foreach ($items as $item) {
