@@ -54,7 +54,7 @@ $app->bearCMS->addons
 
             $app->routes
                 ->add('/-vs.js', function (App\Request $request) use ($app, $excludeBotsInPageviews) {
-                    $action = isset($_GET['a']) ? trim((string) urldecode((string) $_GET['a'])) : '';
+                    $action = isset($_GET['a']) ? trim((string) urldecode(is_array($_GET['a']) ? '' : (string) $_GET['a'])) : '';
                     $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
                     $userAgent = isset($_GET['u']) ? trim(strtolower(str_replace(' ', '', (string) $_GET['u']))) : '';
                     if (!is_array($data)) {
