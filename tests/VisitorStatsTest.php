@@ -29,10 +29,10 @@ class VisitorStatsTest extends BearCMS\AddonTests\PHPUnitTestCase
     {
         $app = $this->getApp();
         $request = new \BearFramework\App\Request();
-        $request->method = 'GET';
-        $request->path->set('/-vs.js');
-        $request->query->set($request->query->make('a', 'test-action'));
-        $request->query->set($request->query->make('d', json_encode(['some-data' => 'some-value'])));
+        $request->method = 'POST';
+        $request->path->set('/-vs-log');
+        $request->formData->set($request->formData->make('a', 'test-action'));
+        $request->formData->set($request->formData->make('d', json_encode(['some-data' => 'some-value'])));
         $response = $app->routes->getResponse($request);
         $this->assertTrue($response instanceof \BearFramework\App\Response);
     }

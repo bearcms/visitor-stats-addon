@@ -16,12 +16,23 @@ var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
             if (typeof data === "undefined") {
                 data = {};
             }
-            var script = document.createElement("script");
-            script.type = "text/javascript";
-            script.async = true;
-            script.src = "INSERT_URL_HERE?a=" + encodeURIComponent(action) + "&d=" + encodeURIComponent(JSON.stringify(data)) + "&u=" + encodeURIComponent(typeof navigator.userAgent !== 'undefined' ? navigator.userAgent : '');
-            var element = document.getElementsByTagName("script")[0];
-            element.parentNode.insertBefore(script, element);
+
+            var xmlhttp = new XMLHttpRequest();
+            // xmlhttp.onreadystatechange = function () {
+            //     if (xmlhttp.readyState === 4) {
+            //         if (xmlhttp.status === 200) {
+
+            //         }
+            //     }
+            // };
+            var params = [];
+            params.push('a=' + encodeURIComponent(action));
+            params.push('d=' + encodeURIComponent(JSON.stringify(data)));
+            params.push('u=' + encodeURIComponent(typeof navigator.userAgent !== 'undefined' ? navigator.userAgent : ''));
+            params = params.join('&');
+            xmlhttp.open('POST', "INSERT_URL_HERE", true);
+            xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xmlhttp.send(params);
         },
         'getSource': function () {
             var u = new URL(originalURL);

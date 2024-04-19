@@ -23,8 +23,6 @@ $app->bearCMS->addons
         $addon->initialize = function (array $options) use ($app) {
             $context = $app->contexts->get(__FILE__);
 
-            \BearCMS\Internal\Config::$robotsTxtDisallow[] = '/-vs.js';
-
             $context->assets->addDir('assets');
 
             $app->shortcuts
@@ -53,10 +51,13 @@ $app->bearCMS->addons
             });
 
             $app->routes
-                ->add('/-vs.js', function (App\Request $request) use ($app, $excludeBotsInPageviews) {
-                    $action = isset($_GET['a']) ? trim((string) urldecode(is_array($_GET['a']) ? '' : (string) $_GET['a'])) : '';
-                    $data = isset($_GET['d']) ? json_decode(urldecode($_GET['d']), true) : null;
-                    $userAgent = isset($_GET['u']) ? trim(strtolower(str_replace(' ', '', (string) $_GET['u']))) : '';
+                ->add('POST /-vs-log', function (App\Request $request) use ($app, $excludeBotsInPageviews) {
+                    $action = $request->formData->getValue('a');
+                    $action = $action !== null ? trim((string) urldecode(is_array($action) ? '' : (string) $action)) : '';
+                    $data = $request->formData->getValue('d');
+                    $data = $data !== null ? json_decode(urldecode($data), true) : null;
+                    $userAgent = $request->formData->getValue('u');
+                    $userAgent = $userAgent !== null ? trim(strtolower(str_replace(' ', '', (string) $userAgent))) : '';
                     if (!is_array($data)) {
                         $data = [];
                     }
@@ -105,8 +106,7 @@ $app->bearCMS->addons
                     if (!$cancel) {
                         $app->visitorStats->log($action, $data);
                     }
-                    $response = new App\Response('{}');
-                    $response->headers->set($response->headers->make('Content-Type', 'text/javascript; charset=UTF-8'));
+                    $response = new App\Response\Text('');
                     $response->headers->set($response->headers->make('Cache-Control', 'no-cache, no-store, must-revalidate'));
                     return $response;
                 });
