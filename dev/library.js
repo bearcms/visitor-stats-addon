@@ -18,17 +18,16 @@ var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
             }
 
             var xmlhttp = new XMLHttpRequest();
-            // xmlhttp.onreadystatechange = function () {
-            //     if (xmlhttp.readyState === 4) {
-            //         if (xmlhttp.status === 200) {
-
-            //         }
-            //     }
-            // };
             var params = [];
             params.push('a=' + encodeURIComponent(action));
             params.push('d=' + encodeURIComponent(JSON.stringify(data)));
             params.push('u=' + encodeURIComponent(typeof navigator.userAgent !== 'undefined' ? navigator.userAgent : ''));
+            try {
+                var timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                params.push('z=' + encodeURIComponent(timeZone));
+            } catch (e) {
+
+            }
             params = params.join('&');
             xmlhttp.open('POST', "INSERT_URL_HERE", true);
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");

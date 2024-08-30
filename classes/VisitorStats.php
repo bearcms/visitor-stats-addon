@@ -43,7 +43,7 @@ class VisitorStats
         }
         $htmlToInsert = '';
         //$js = file_get_contents(__DIR__ . '/../dev/library.js');
-        $js = 'var vsjs=void 0!==vsjs?vsjs:function(){var e=originalURL=window.location.href;if(-1!==e.indexOf("-vssource"))try{e=e.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""),history.replaceState({},"",e)}catch(e){}return{log:function(e,n){void 0===e&&(e=""),void 0===n&&(n={});var o=new XMLHttpRequest,r=[];r.push("a="+encodeURIComponent(e)),r.push("d="+encodeURIComponent(JSON.stringify(n))),r.push("u="+encodeURIComponent(void 0!==navigator.userAgent?navigator.userAgent:"")),r=r.join("&"),o.open("POST","INSERT_URL_HERE",!0),o.setRequestHeader("Content-type","application/x-www-form-urlencoded"),o.send(r)},getSource:function(){var e=new URL(originalURL);return void 0!==e.searchParams?e.searchParams.get("-vssource"):null},getURL:function(){return e}}}();';
+        $js = 'var vsjs=void 0!==vsjs?vsjs:function(){var e=originalURL=window.location.href;if(-1!==e.indexOf("-vssource"))try{e=e.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""),history.replaceState({},"",e)}catch(e){}return{log:function(e,o){void 0===e&&(e=""),void 0===o&&(o={});var n=new XMLHttpRequest,r=[];r.push("a="+encodeURIComponent(e)),r.push("d="+encodeURIComponent(JSON.stringify(o))),r.push("u="+encodeURIComponent(void 0!==navigator.userAgent?navigator.userAgent:""));try{var t=Intl.DateTimeFormat().resolvedOptions().timeZone;r.push("z="+encodeURIComponent(t))}catch(e){}r=r.join("&"),n.open("POST","INSERT_URL_HERE",!0),n.setRequestHeader("Content-type","application/x-www-form-urlencoded"),n.send(r)},getSource:function(){var e=new URL(originalURL);return void 0!==e.searchParams?e.searchParams.get("-vssource"):null},getURL:function(){return e}}}();';
         $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs-log'), '<script>' . $js . '</script>');
         if ($trackPageview) {
             //$js = file_get_contents(__DIR__ . '/../dev/log-client-pageview-event.js');
@@ -64,18 +64,6 @@ class VisitorStats
     public function log(string $action, array $data = [])
     {
         $app = App::get();
-
-        //        $anonymizeIP = function($ip) {
-        //            $v6 = strpos($ip, ':') !== false;
-        //            $parts = explode($v6 ? ':' : '.', $ip);
-        //            $partsCount = sizeof($parts);
-        //            for ($i = $v6 ? 6 : 3; $i < $partsCount; $i++) {
-        //                $parts[$i] = '*';
-        //            }
-        //            return implode($v6 ? ':' : '.', $parts);
-        //        };
-        //        $anonymizeIP(isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : ''));
-        //        isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : ''
 
         $dataToWrite = [];
         $dataToWrite[] = 2; // data format version
@@ -155,6 +143,7 @@ class VisitorStats
                 'Bing (' . $textSearchEngine . ')' => ['*.bing.com'],
                 'Yandex (' . $textSearchEngine . ')' => ['*.yandex.ru', '*.yandex.com'],
                 'Brave Search (' . $textSearchEngine . ')' => ['search.brave.com'],
+                'Ecosia (' . $textSearchEngine . ')' => ['ecosia.org'],
                 'Abv.bg' => ['*.abv.bg'],
                 'Mail.bg' => ['*.mail.bg'],
                 'LinkedIn' => ['linkedin.com'],

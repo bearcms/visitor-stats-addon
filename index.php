@@ -8,6 +8,7 @@
  */
 
 use BearCMS\VisitorStats;
+use BearCMS\VisitorStats\Internal\Utilities;
 use BearFramework\App;
 
 $app = App::get();
@@ -16,6 +17,7 @@ $context = $app->contexts->get(__FILE__);
 
 $context->classes
     ->add('BearCMS\VisitorStats\BeforeApplyEventDetails', 'classes/VisitorStats/BeforeApplyEventDetails.php')
+    ->add('BearCMS\VisitorStats\Internal\Utilities', 'classes/VisitorStats/Internal/Utilities.php')
     ->add('BearCMS\VisitorStats', 'classes/VisitorStats.php');
 
 $app->bearCMS->addons
@@ -58,55 +60,38 @@ $app->bearCMS->addons
                     $data = $data !== null ? json_decode(urldecode($data), true) : null;
                     $userAgent = $request->formData->getValue('u');
                     $userAgent = $userAgent !== null ? trim(strtolower(str_replace(' ', '', (string) $userAgent))) : '';
+                    $timeZone = $request->formData->getValue('z');
+                    $timeZone = $timeZone !== null ? trim(strtolower((string) $timeZone)) : '';
                     if (!is_array($data)) {
                         $data = [];
                     }
                     $cancel = false;
                     if ($action === 'pageview') {
-                        $serverUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT'])) : '';
-                        $anonymizedUserAgent = preg_replace('/[0-9]/', '*', $userAgent !== '' ? $userAgent : $serverUserAgent);
-                        if ($anonymizedUserAgent === '') {
-                            $anonymizedUserAgent = 'unknown';
+                        if ($userAgent === '') {
+                            $userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower(str_replace(' ', '', $_SERVER['HTTP_USER_AGENT'])) : '';
                         }
                         if ($excludeBotsInPageviews) {
                             $bots = ['bingpreview', 'bot', 'spider', 'crawl'];
                             foreach ($bots as $bot) {
-                                if (strpos($anonymizedUserAgent, $bot) !== false || strpos($serverUserAgent, $bot) !== false) {
+                                if (strpos($userAgent, $bot) !== false) {
                                     $cancel = true;
                                     break;
                                 }
                             }
                         }
                         if (!$cancel) {
-                            $data['anonymizedUserAgent'] = $anonymizedUserAgent;
-                            // if (isset($data['url'])) {
-                            //     $query = parse_url($data['url'], PHP_URL_QUERY);
-                            //     if (strlen($query) > 0) {
-                            //         $temp = null;
-                            //         parse_str($query, $temp);
-                            //         if (isset($temp['-vssource'])) {
-                            //             $data['source'] = trim($temp['-vssource']);
-                            //         }
-                            //     }
-                            // }
-                            $ip = (string)$request->client->ip;
-                            if (strlen($ip) > 0) {
-                                $getCountryCode = function ($ip) {
-                                    if ($ip === '127.0.0.1') {
-                                        return null;
-                                    }
-                                    $function = require __DIR__ . '/countries-db/result.php';
-                                    return $function($ip);
-                                };
-                                $data['country'] = $getCountryCode($ip);
+                            $data['country'] = Utilities::getCountryCode((string)$timeZone);
+                            if ($data['country'] === null) {
+                                unset($data['country']);
                             }
-                            $data['deviceType'] = strpos($anonymizedUserAgent, 'mobi') !== false ? 'mobile' : 'desktop';
+                            $data['deviceType'] = strpos($userAgent, 'mobi') !== false ? 'mobile' : 'desktop';
                         }
                     }
                     if (!$cancel) {
                         $app->visitorStats->log($action, $data);
                     }
                     $response = new App\Response\Text('');
+                    $response->headers->set($response->headers->make('X-Robots-Tag', 'noindex, nofollow'));
                     $response->headers->set($response->headers->make('Cache-Control', 'no-cache, no-store, must-revalidate'));
                     return $response;
                 });
