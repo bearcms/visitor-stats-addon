@@ -9,5 +9,7 @@
 
 return [
     'bearcms.visitor-stats-addon.search engine' => 'търсачка',
-    'bearcms.visitor-stats-addon.application' => 'приложение'
+    'bearcms.visitor-stats-addon.application' => 'приложение',
+    'bearcms.visitor-stats-addon.date' => 'Дата',
+    'bearcms.visitor-stats-addon.pageviewsCount' => 'Брой посетени страници',
 ];

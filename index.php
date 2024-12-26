@@ -52,6 +52,29 @@ $app->bearCMS->addons
                 return $app->visitorStats->getStats($data);
             });
 
+            \BearCMS\Internal\DataExport::addHandler('visitorStats', function (array $options) use ($app) {
+                $statsData = $options['data'];
+                $statsType = $statsData['type'];
+                $result = $app->visitorStats->getStats([$statsData])[$statsType];
+                $names = [];
+                $formaters = [];
+                if ($statsType === 'pageviewsPerDayCount') {
+                    $names['date'] = __('bearcms.visitor-stats-addon.date');
+                    $formaters['date'] = function ($value) use ($app) {
+                        return $app->localization->formatDate($value, ['date']);
+                    };
+                    $names['count'] = __('bearcms.visitor-stats-addon.pageviewsCount');
+                }
+                foreach ($result as $i => $data) {
+                    $temp = [];
+                    foreach ($data as $name => $value) {
+                        $temp[$names[$name]] = isset($formaters[$name]) ? $formaters[$name]($value) : $value;
+                    }
+                    $result[$i] = $temp;
+                }
+                return ['filename' => 'visitor-stats', 'data' => $result, 'multiple' => true];
+            });
+
             $app->routes
                 ->add('POST /-vs-log', function (App\Request $request) use ($app, $excludeBotsInPageviews) {
                     $action = $request->formData->getValue('a');

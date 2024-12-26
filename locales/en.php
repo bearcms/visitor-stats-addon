@@ -9,5 +9,7 @@
 
 return [
     'bearcms.visitor-stats-addon.search engine' => 'search engine',
-    'bearcms.visitor-stats-addon.application' => 'application'
+    'bearcms.visitor-stats-addon.application' => 'application',
+    'bearcms.visitor-stats-addon.date' => 'Date',
+    'bearcms.visitor-stats-addon.pageviewsCount' => 'Pageviews count',
 ];
