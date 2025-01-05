@@ -206,7 +206,7 @@ class VisitorStats
             return $result;
         };
 
-        $sortDataByTime = function (&$data, $order = 'desc') {
+        $sortDataByTime = function (&$data, $order = 'desc'): void {
             usort($data, function ($a, $b) use ($order) {
                 if ($order === 'desc') {
                     return $b[0] - $a[0];
@@ -293,7 +293,7 @@ class VisitorStats
                             'deviceType' => $deviceType,
                             'country' => $country
                         ];
-                        if ($limit !== null && sizeof($result) === $limit) {
+                        if ($limit !== null && count($result) === $limit) {
                             $break = true;
                             break;
                         }

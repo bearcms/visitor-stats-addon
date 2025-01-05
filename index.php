@@ -21,8 +21,8 @@ $context->classes
     ->add('BearCMS\VisitorStats', 'classes/VisitorStats.php');
 
 $app->bearCMS->addons
-    ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app) {
-        $addon->initialize = function (array $options) use ($app) {
+    ->register('bearcms/visitor-stats-addon', function (\BearCMS\Addons\Addon $addon) use ($app): void {
+        $addon->initialize = function (array $options) use ($app): void {
             $context = $app->contexts->get(__FILE__);
 
             $context->assets->addDir('assets');
@@ -120,7 +120,7 @@ $app->bearCMS->addons
                 });
 
             if ($autoTrackPageviews) {
-                $app->addEventListener('beforeSendResponse', function (App\BeforeSendResponseEventDetails $details) use ($app) {
+                $app->addEventListener('beforeSendResponse', function (App\BeforeSendResponseEventDetails $details) use ($app): void {
                     if ($details->response instanceof App\Response\HTML) {
                         $app->visitorStats->apply($details->response, ['trackPageview' => true]);
                     }
