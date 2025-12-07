@@ -411,26 +411,26 @@ class VisitorStats
                         $urlHost = $getHost($itemData['url']);
                         $referrerHost = isset($itemData['referrer']) ? $getHost($itemData['referrer']) : null;
                         if ($urlHost !== null && $referrerHost !== null && $urlHost !== $referrerHost) {
-                            $path = $getPath($itemData['url']);
+                            $path = (string)$getPath($itemData['url']);
                             if (!isset($temp[$path])) {
                                 $temp[$path] = 0;
                             }
                             $temp[$path]++;
                         }
                     } elseif ($type === 'pageviewsPerPageCount') {
-                        $path = $getPath($itemData['url']);
+                        $path = (string)$getPath($itemData['url']);
                         if (!isset($temp[$path])) {
                             $temp[$path] = 0;
                         }
                         $temp[$path]++;
                     } elseif ($type === 'deviceTypesPageviewsCount') {
-                        $deviceType = $getDeviceType($itemData);
+                        $deviceType = (string)$getDeviceType($itemData);
                         if (!isset($temp[$deviceType])) {
                             $temp[$deviceType] = 0;
                         }
                         $temp[$deviceType]++;
                     } elseif ($type === 'countriesPageviewsCount') {
-                        $country = $getCountry($itemData);
+                        $country = (string)$getCountry($itemData);
                         if (!isset($temp[$country])) {
                             $temp[$country] = 0;
                         }
