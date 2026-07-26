@@ -10,28 +10,24 @@ var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
     }
     return {
         'log': function (action, data) {
+            if (typeof navigator.sendBeacon === "undefined") {
+                return false;
+            }
             if (typeof action === "undefined") {
                 action = "";
             }
             if (typeof data === "undefined") {
                 data = {};
             }
-
-            var xmlhttp = new XMLHttpRequest();
-            var params = [];
-            params.push('a=' + encodeURIComponent(action));
-            params.push('d=' + encodeURIComponent(JSON.stringify(data)));
-            params.push('u=' + encodeURIComponent(typeof navigator.userAgent !== 'undefined' ? navigator.userAgent : ''));
+            var formData = new FormData();
+            formData.append('a', action);
+            formData.append('d', JSON.stringify(data));
+            formData.append('u', typeof navigator.userAgent !== 'undefined' ? navigator.userAgent : '');
             try {
-                var timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                params.push('z=' + encodeURIComponent(timeZone));
+                formData.append('z', Intl.DateTimeFormat().resolvedOptions().timeZone);
             } catch (e) {
-
             }
-            params = params.join('&');
-            xmlhttp.open('POST', "INSERT_URL_HERE", true);
-            xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xmlhttp.send(params);
+            return navigator.sendBeacon('INSERT_URL_HERE', formData);
         },
         'getSource': function () {
             var u = new URL(originalURL);
