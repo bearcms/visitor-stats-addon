@@ -29,22 +29,34 @@ class VisitorStats
      */
     public function apply(App\Response $response, array $options = []): void
     {
-        if ($this->hasEventListeners('beforeApply')) {
-            $eventDetails = new BeforeApplyEventDetails($response);
-            $this->dispatchEvent('beforeApply', $eventDetails);
-            if ($eventDetails->preventDefault) {
-                return;
-            }
-        }
-        $trackPageview = isset($options['trackPageview']) ? (int) $options['trackPageview'] > 0 : false;
         $app = App::get();
         if ($app->bearCMS->currentUser->exists()) {
             return;
         }
+        $currentURL = '';
+        if ($this->hasEventListeners('beforeApply')) {
+            $eventDetails = new BeforeApplyEventDetails($response);
+            $eventDetails->url = $app->request->getURL();
+            $urlBefore = $eventDetails->url;
+            $this->dispatchEvent('beforeApply', $eventDetails);
+            if ($eventDetails->preventDefault) {
+                return;
+            }
+            if ($urlBefore !== $eventDetails->url) {
+                $currentURL = $eventDetails->url;
+            }
+        }
+        $trackPageview = isset($options['trackPageview']) ? (int) $options['trackPageview'] > 0 : false;
         $htmlToInsert = '';
         //$js = file_get_contents(__DIR__ . '/../dev/library.js');
-        $js = 'var vsjs=void 0!==vsjs?vsjs:function(){var e=originalURL=window.location.href;if(-1!==e.indexOf("-vssource"))try{e=e.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""),history.replaceState({},"",e)}catch(e){}return{log:function(e,r){if(void 0===navigator.sendBeacon)return!1;void 0===e&&(e=""),void 0===r&&(r={});var a=new FormData;a.append("a",e),a.append("d",JSON.stringify(r)),a.append("u",void 0!==navigator.userAgent?navigator.userAgent:"");try{a.append("z",Intl.DateTimeFormat().resolvedOptions().timeZone)}catch(e){}return navigator.sendBeacon("INSERT_URL_HERE",a)},getSource:function(){var e=new URL(originalURL);return void 0!==e.searchParams?e.searchParams.get("-vssource"):null},getURL:function(){return e}}}();';
-        $htmlToInsert .= str_replace('INSERT_URL_HERE', $app->urls->get('/-vs-log'), '<script>' . $js . '</script>');
+        $js = 'var vsjs=void 0!==vsjs?vsjs:function(){var e=window.location.href,r="INSERT_URL_HERE";if(""===r&&(r=e),-1!==r.indexOf("-vssource"))try{r=r.replace(/\?-vssource=.*?&/,"?").replace(/&-vssource=.*?&/,"&").replace(/\?-vssource=.*/,"").replace(/&-vssource=.*/,""),history.replaceState({},"",r)}catch(e){}return{log:function(e,r){if(void 0===navigator.sendBeacon)return!1;void 0===e&&(e=""),void 0===r&&(r={});var a=new FormData;a.append("a",e),a.append("d",JSON.stringify(r)),a.append("u",void 0!==navigator.userAgent?navigator.userAgent:"");try{a.append("z",Intl.DateTimeFormat().resolvedOptions().timeZone)}catch(e){}return navigator.sendBeacon("INSERT_LOG_URL_HERE",a)},getSource:function(){var r=new URL(e);return void 0!==r.searchParams?r.searchParams.get("-vssource"):null},getURL:function(){return r}}}();';
+        $htmlToInsert .= str_replace([
+            'INSERT_URL_HERE',
+            'INSERT_LOG_URL_HERE'
+        ], [
+            $currentURL,
+            $app->urls->get('/-vs-log')
+        ], '<script>' . $js . '</script>');
         if ($trackPageview) {
             //$js = file_get_contents(__DIR__ . '/../dev/log-client-pageview-event.js');
             $js = '(function(){var d=function(){var b={};b.url=vsjs.getURL();var a=vsjs.getSource();null!==a&&(b.source=a);a="";try{var c=""!==document.referrer?(new URL(document.referrer)).host:"";a=c!==window.location?c:document.referrer}catch(e){}0<a.length&&(b.referrer=a);vsjs.log("pageview",b)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",d):d()})();';

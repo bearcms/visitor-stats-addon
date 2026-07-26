@@ -33,6 +33,9 @@ class BeforeApplyEventDetails
                 'init' => function () {
                     return false;
                 }
+            ])
+            ->defineProperty('url', [
+                'type' => 'string'
             ]);
         $this->response = $response;
     }

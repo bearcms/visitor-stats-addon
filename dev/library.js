@@ -1,5 +1,9 @@
 var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
-    var url = originalURL = window.location.href;
+    var originalURL = window.location.href;
+    var url = "INSERT_URL_HERE";
+    if (url === "") {
+        url = originalURL;
+    }
     if (url.indexOf('-vssource') !== -1) {
         try {
             url = url.replace(/\?-vssource=.*?&/, '?').replace(/&-vssource=.*?&/, '&').replace(/\?-vssource=.*/, '').replace(/&-vssource=.*/, '');
@@ -27,7 +31,7 @@ var vsjs = typeof vsjs !== "undefined" ? vsjs : (function () {
                 formData.append('z', Intl.DateTimeFormat().resolvedOptions().timeZone);
             } catch (e) {
             }
-            return navigator.sendBeacon('INSERT_URL_HERE', formData);
+            return navigator.sendBeacon('INSERT_LOG_URL_HERE', formData);
         },
         'getSource': function () {
             var u = new URL(originalURL);
