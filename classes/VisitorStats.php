@@ -130,7 +130,7 @@ class VisitorStats
         };
 
         $getSource = function (array $itemData) use ($getHost): ?string {
-            if (isset($itemData['source']) && strlen($itemData['source']) > 0) {
+            if (isset($itemData['source']) && is_string($itemData['source']) && strlen($itemData['source']) > 0) {
                 return $itemData['source'];
             }
             $urlHost = $getHost($itemData['url']);
@@ -190,14 +190,14 @@ class VisitorStats
         };
 
         $getDeviceType = function (array $itemData): ?string {
-            if (isset($itemData['deviceType']) && strlen($itemData['deviceType']) > 0) {
+            if (isset($itemData['deviceType']) && is_string($itemData['deviceType']) && strlen($itemData['deviceType']) > 0) {
                 return $itemData['deviceType'];
             }
             return null;
         };
 
         $getCountry = function (array $itemData): ?string {
-            if (isset($itemData['country']) && strlen($itemData['country']) > 0) {
+            if (isset($itemData['country']) && is_string($itemData['country']) && strlen($itemData['country']) > 0) {
                 return $itemData['country'];
             }
             return null;
